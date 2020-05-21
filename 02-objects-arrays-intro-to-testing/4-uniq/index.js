@@ -5,4 +5,16 @@
  */
 export function uniq(arr) {
 
+  if (typeof(arr) === "undefined" || arr === []) {
+    return [];
+  }
+
+  return arr.reduce( (accumulator, currentValue) => {
+
+    if (accumulator.indexOf(currentValue) === -1) {
+      accumulator.push(currentValue);
+    }
+
+    return accumulator;
+  }, []);
 }
