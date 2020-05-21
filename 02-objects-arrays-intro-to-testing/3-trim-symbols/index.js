@@ -6,4 +6,32 @@
  */
 export function trimSymbols(string, size) {
 
+  let counter = 1;
+
+  if (string === "" || size === 0) {
+    return "";
+  } else if (typeof(size) === "undefined" ) {
+    return string;
+  }
+
+  return string
+    .split("")
+    .reduce( (acc, curr) => {
+
+      if ( acc[acc.length -1] === curr ) {
+
+        if (counter < size) {
+          counter++;
+          return acc + curr;
+
+        } else {
+          return acc;
+        }
+
+      } else {
+        counter = 1;
+        return acc + curr;
+      }
+      
+    }, string.split("")[0]);
 }
