@@ -6,7 +6,7 @@
  */
 export function sortStrings(arr, param = 'asc') {
 
-  const possiblePamams = ["asc", "desc"];
+/*   const possiblePamams = ["asc", "desc"];
 
   if ( !(possiblePamams.includes(param)) ) {
     console.log("input param is not valid");
@@ -14,10 +14,27 @@ export function sortStrings(arr, param = 'asc') {
   }
 
   if (param === "desc") {
-    arr.sort( (a,b) => a.localeCompare(b, "ru", { caseFirst: "upper"})).reverse();
-    return arr;
+    return makeSorting(arr).reverse();
   }
 
-  arr.sort( (a,b) => a.localeCompare(b, "ru", { caseFirst: "upper"}));
-  return arr;
+  return makeSorting(arr);
+
+  function makeSorting(arr) {
+    return [...arr].sort( (a,b) =>
+      a.localeCompare(b, "ru", { caseFirst: "upper"}));
+  } */
+
+  switch (param) {
+    case "asc":
+      return makeSorting(arr, "ru", 1);
+    case "desc":
+      return makeSorting(arr, "ru", -1);
+    default:
+      return makeSorting(arr, "ru", 1);
+  }
+
+  function makeSorting(arr, locale, direction) {
+    return [...arr].sort( (a,b) =>
+      direction * a.localeCompare(b, locale, { caseFirst: "upper"}));
+  }
 }
