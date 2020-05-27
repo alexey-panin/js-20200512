@@ -1,5 +1,4 @@
 let activeComponent = null;
-let timerId = null;
 
 export default class NotificationMessage {
   element; // HTMLElement;
@@ -13,6 +12,7 @@ export default class NotificationMessage {
     this.message = message;
     this.duration = duration;
     this.type = type;
+    
     this.render();
   }
 
@@ -34,12 +34,6 @@ export default class NotificationMessage {
 
     if (activeComponent) {
       activeComponent.remove();
-      /**
-       * может и не обязательно здесь очищать timeout, работает все также
-       * просто заметил, что если очень часто нажимать кнопку, создасться 
-       * очень много отложенных колбэков, которые в итоге выполняться.
-       */
-      if (timerId) clearTimeout(timerId);
     }
 
     const element = document.createElement('div');
@@ -48,19 +42,12 @@ export default class NotificationMessage {
     activeComponent = this.element;
   }
 
-  show(parent) {
+  show(parent = document.body) {
+    parent.append(this.element);
 
-    const placeTimeout = () => {
-      timerId = setTimeout( () => this.remove(), this.duration);
-    }
-
-    if (parent) {
-      parent.append(this.element);
-      placeTimeout();
-    } else {
-      document.body.append(this.element);
-      placeTimeout();
-    }
+    setTimeout(() => {
+      this.remove();
+    }, this.duration);
   }
 
   remove() {
