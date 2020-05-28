@@ -30,9 +30,18 @@ export default class SortableTable {
     const tableHeader = document.createElement("div");
     tableHeader.setAttribute("data-element", "header");
     tableHeader.className = "sortable-table__header sortable-table__row";
+
+    let sortTypes = {};
+
     for (let item of headerData) {
       tableHeader.insertAdjacentHTML("beforeend", this.getTableHeaderTemplate(item));
+
+      if (item.sortable) {
+        sortTypes[item.id] = item.sortType;
+      }
     }
+
+    this._sortTypes = sortTypes;
 
     return tableHeader;
   }
@@ -80,13 +89,19 @@ export default class SortableTable {
   }
 
   sort(fieldValue, orderValue, arr = this.data) {
+    let sortedArray = [];
     const direction = {
       asc: 1,
       desc: -1
     }
 
-    let sortedArray = [...arr].sort((a, b) => 
-      direction[orderValue] * (a[fieldValue] - b[fieldValue]));
+    if (this._sortTypes[fieldValue] === "string") {
+      sortedArray = [...arr].sort((a, b) =>
+        direction[orderValue] * a[fieldValue].localeCompare(b[fieldValue], 'default', { caseFirst: "upper"}));
+    } else {
+      sortedArray = [...arr].sort((a, b) => 
+        direction[orderValue] * (a[fieldValue] - b[fieldValue]));
+    }
 
     let sortedTableBody = this.getTableBody(sortedArray);
 
