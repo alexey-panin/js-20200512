@@ -1,5 +1,6 @@
 export default class SortableTable {
-  element; // HTMLElement;
+  static activeTableBody;
+  element;
 
   constructor(headerData, data) {
     this.headerData = headerData;
@@ -25,6 +26,17 @@ export default class SortableTable {
     `;
   }
 
+  getTableHeader(headerData) {
+    const tableHeader = document.createElement("div");
+    tableHeader.setAttribute("data-element", "header");
+    tableHeader.className = "sortable-table__header sortable-table__row";
+    for (let item of headerData) {
+      tableHeader.insertAdjacentHTML("beforeend", this.getTableHeaderTemplate(item));
+    }
+
+    return tableHeader;
+  }
+
   getTableRowTemplate(...productData) {
     const singleProductData = productData[0];
 
@@ -40,54 +52,47 @@ export default class SortableTable {
     `;
   }
 
-  render(sortedArray) {
-    const table = document.createElement("div");
-    table.className="sortable-table";
-
-    const tableHeader = document.createElement("div");
-    tableHeader.setAttribute("data-element", "header");
-    tableHeader.className = "sortable-table__header sortable-table__row";
-    for (let item of this.headerData) {
-      tableHeader.insertAdjacentHTML("beforeend", this.getTableHeaderTemplate(item));
-    }
-
+  getTableBody(tableData) {
     const tableBody = document.createElement("div");
     tableBody.setAttribute("data-element", "body");
     tableBody.className = "sortable-table__body";
-
-
-    let tableData = this.data;
-    if (sortedArray) {
-      tableData = sortedArray;
-    }
 
     for (let item of tableData) {
       tableBody.insertAdjacentHTML("beforeend", this.getTableRowTemplate(item));
     }
 
+    return tableBody;
+  }
+
+  render() {
+    const table = document.createElement("div");
+    table.className="sortable-table";
+
+    const tableHeader = this.getTableHeader(this.headerData);
+    const tableBody = this.getTableBody(this.data);
+
+    SortableTable.activeTableBody = tableBody;
+
     table.append(tableHeader);
     table.append(tableBody);
 
     this.element = table;
-
-    return this.element;
   }
 
   sort(fieldValue, orderValue, arr = this.data) {
-
-    let sortedArray = [];
     const direction = {
       asc: 1,
       desc: -1
     }
 
-    sortedArray = [...arr].sort((a, b) => 
-      direction[orderValue] * (a.price - b.price));
+    let sortedArray = [...arr].sort((a, b) => 
+      direction[orderValue] * (a[fieldValue] - b[fieldValue]));
 
-    console.log(sortedArray);
-    console.log(this.render(sortedArray));
-    //TODO: replace this with static property where you save link to the table body
-    document.querySelector(".sortable-table").replaceWith(this.render(sortedArray));
+    let sortedTableBody = this.getTableBody(sortedArray);
+
+    SortableTable.activeTableBody.replaceWith(sortedTableBody);
+
+    SortableTable.activeTableBody = sortedTableBody;
 
   }
 
