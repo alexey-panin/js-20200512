@@ -21,7 +21,7 @@ export default class SortableTable {
     return `
         <div class="sortable-table__cell" data-name=${headerData.id} data-sortable=${headerData.sortable}>
           <span>${headerData.title}</span>
-          ${(headerData.id === "title")? insertSortArrow() : ""}
+          ${(headerData.sortable)? insertSortArrow() : ""}
         </div>
     `;
   }
