@@ -2,14 +2,13 @@ export default class SortableTable {
   static activeTableBody;
   element;
 
-  constructor(headerData, data) {
+  constructor(headerData, { data } = {}) {
     this.headerData = headerData;
-    this.data = data.data;
+    this.data = data;
     this.render();
   }
 
-  getTableHeaderTemplate(...headerDataArr) {
-    const headerData = headerDataArr[0];
+/*   getTableHeaderTemplate(headerData) {
     const insertSortArrow = () => {
         return `
           <span class="sortable-table__sort-arrow">
@@ -24,10 +23,10 @@ export default class SortableTable {
           ${(headerData.sortable)? insertSortArrow() : ""}
         </div>
     `;
-  }
+  } */
 
   getTableHeader(headerData) {
-    const tableHeader = document.createElement("div");
+/*     const tableHeader = document.createElement("div");
     tableHeader.setAttribute("data-element", "header");
     tableHeader.className = "sortable-table__header sortable-table__row";
 
@@ -42,23 +41,68 @@ export default class SortableTable {
     }
 
     this._sortTypes = sortTypes;
-
-    return tableHeader;
+    console.log(tableHeader);
+    return tableHeader; */
+    return `
+      <div data-element="header" class="sortable-table__header sortable-table__row">
+        ${headerData
+          .map(({ id, title, sortable }) => {
+            return `
+            <div class="sortable-table__cell" data-name='${id}' data-sortable='${sortable}'>
+              <span>${title}</span>${(sortable)?`
+              <span class="sortable-table__sort-arrow">
+                <span class="sort-arrow"></span>
+              </span>` : ""}
+            </div>
+          `;
+          })
+          .join("")}
+      </div>
+    `;
   }
 
-  getTableRowTemplate(...productData) {
-    const singleProductData = productData[0];
+  getTableRowTemplate(productData) {
+    const tableRow = document.createElement("a");
+    tableRow.setAttribute("href", `/products/${productData.id}`);
+    tableRow.className = "sortable-table__row";
 
-    return `
-    <a href="/products/${singleProductData.id}" class="sortable-table__row">
+    let tableColumns = '';
+
+    const cells = this.headerData.map(({id, template}) => {
+      return {
+        id,
+        template
+      };
+    });
+
+    for (let { id, template } of cells) {
+      if (template) {
+        tableColumns += template(productData[id]);
+        continue;
+      }
+
+      tableColumns += `<div class="sortable-table__cell">${productData[id]}</div>`
+
+    }
+
+    tableRow.insertAdjacentHTML("beforeend", tableColumns);
+
+    return tableRow;
+
+
+
+  
+
+/*     return `
+    <a href="/products/${productData.id}" class="sortable-table__row">
       <div class="sortable-table__cell">
-        <img class="sortable-table-image" alt="Image" src=${singleProductData.images[0].url}></div>
-      <div class="sortable-table__cell">${singleProductData.title}</div>
-      <div class="sortable-table__cell">${singleProductData.quantity}</div>
-      <div class="sortable-table__cell">${singleProductData.price}</div>
-      <div class="sortable-table__cell">${singleProductData.sales}</div>
+        <img class="sortable-table-image" alt="Image" src=${(productData.images)? productData.images[0].url : ""}></div>
+      <div class="sortable-table__cell">${productData.title}</div>
+      <div class="sortable-table__cell">${productData.quantity}</div>
+      <div class="sortable-table__cell">${productData.price}</div>
+      <div class="sortable-table__cell">${productData.sales}</div>
     </a>
-    `;
+    `; */
   }
 
   getTableBody(tableData) {
@@ -67,10 +111,18 @@ export default class SortableTable {
     tableBody.className = "sortable-table__body";
 
     for (let item of tableData) {
-      tableBody.insertAdjacentHTML("beforeend", this.getTableRowTemplate(item));
+      //tableBody.insertAdjacentHTML("beforeend", this.getTableRowTemplate(item));
+      tableBody.append(this.getTableRowTemplate(item));
     }
 
     return tableBody;
+  }
+
+  get subElements() {
+    return {
+        header : this.getTableHeader(this.headerData),
+        body : this.getTableBody(this.data)
+    }
   }
 
   render() {
@@ -82,7 +134,8 @@ export default class SortableTable {
 
     SortableTable.activeTableBody = tableBody;
 
-    table.append(tableHeader);
+    //table.insertAdjacentHTML("beforeend", tableHeader);
+    table.innerHTML = tableHeader;
     table.append(tableBody);
 
     this.element = table;
