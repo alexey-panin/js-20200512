@@ -1,11 +1,13 @@
 export default class SortableTable {
-  static activeTableBody;
   element;
+  subElements = {};
 
   constructor(headerData, { data } = {}) {
     this.headerData = headerData;
     this.data = data;
+    this._getTableHeaderCells();
     this.render();
+    this.subElements = this.getSubElements();
   }
 
   _getTableHeaderCells() {
@@ -83,16 +85,17 @@ export default class SortableTable {
 
   }
 
-  get subElements() {
-    return {
-        header : this.getTableHeader(this.headerData),
-        body : this.getTableBody(this.data)
-    }
+  getSubElements(element = this.element) {
+    const elements = element.querySelectorAll('[data-element]');
+
+    return [...elements].reduce((accum, subElement) => {
+      accum[subElement.dataset.element] = subElement;
+
+      return accum;
+    }, {});
   }
 
   render() {
-
-    this._getTableHeaderCells();
 
     const wrapper = document.createElement('div');
 
@@ -103,27 +106,37 @@ export default class SortableTable {
     this.element = element;
   }
 
-  sort(fieldValue, orderValue, arr = this.data) {
-    let sortedArray = [];
+  sortData(fieldValue, orderValue) {
+    const arr = [...this.data];
     const direction = {
       asc: 1,
       desc: -1
     }
+    let sortType;
+    const column = this.headerData.find(item => item.id === fieldValue && item.sortable === true);
 
-    if (this._sortTypes[fieldValue] === "string") {
-      sortedArray = [...arr].sort((a, b) =>
-        direction[orderValue] * a[fieldValue].localeCompare(b[fieldValue], 'default', { caseFirst: "upper"}));
+    if (column) {
+      ({ sortType } = column);
     } else {
-      sortedArray = [...arr].sort((a, b) => 
-        direction[orderValue] * (a[fieldValue] - b[fieldValue]));
+      throw new Error("item is not sortable");
     }
 
-    let sortedTableBody = this.getTableBody(sortedArray);
+    return [...arr].sort((a,b) => {
+      switch (sortType) {
+        case "string":
+          return direction[orderValue] * a[fieldValue].localeCompare(b[fieldValue], 'ru', { caseFirst: "upper"})
+        case "number":
+          return direction[orderValue] * (a[fieldValue] - b[fieldValue])      
+        default:
+          return direction[orderValue] * (a[fieldValue] - b[fieldValue])
+      }
+    });
+  }
 
-    //SortableTable.activeTableBody.replaceWith(sortedTableBody);
-
-    //SortableTable.activeTableBody = sortedTableBody;
-
+  sort (fieldValue, orderValue) {
+    const sortedData = this.sortData(fieldValue, orderValue);
+    const sortedTableBody = this.getTableBody(sortedData);
+    this.subElements.body.innerHTML = sortedTableBody;
   }
 
   remove () {
@@ -132,5 +145,6 @@ export default class SortableTable {
 
   destroy() {
     this.remove();
+    this.subElements = {};
   }
 }
