@@ -7,7 +7,38 @@ export default class SortableTable {
     this.data = data;
     this._getTableHeaderCells();
     this.render();
-    this.subElements = this.getSubElements();
+    this.initEventListeners();
+    this.initializeSorting();
+  }
+
+  initEventListeners() {
+
+    const eventListenerCallback = (event) => {
+      const targetDiv = event.path.find(item => item.dataset.name);
+      const columnName = targetDiv.dataset.name;
+
+      const doSorting = (sortingOrder) => {
+        this.sort(columnName, sortingOrder);
+        targetDiv.dataset.order = sortingOrder;
+      }
+
+      switch (targetDiv.dataset.order) {
+        case "asc":
+          doSorting("desc");
+          break;
+        case "desc":
+          doSorting("asc");
+          break;
+        default:
+          doSorting("asc");
+      }
+    }
+
+    for (let item of this.subElements.header.children) {
+      if (item.dataset.sortable === "true") {
+        item.addEventListener("click", eventListenerCallback);
+      }
+    }
   }
 
   _getTableHeaderCells() {
@@ -27,7 +58,7 @@ export default class SortableTable {
         ${this.headerData
           .map(({ id, title, sortable }) => {
             return `
-            <div class="sortable-table__cell" data-name='${id}' data-sortable='${sortable}'>
+            <div class="sortable-table__cell" data-name='${id}' data-sortable='${sortable}' data-order=''>
               <span>${title}</span>${(sortable)
               ? `<span class="sortable-table__sort-arrow">
                   <span class="sort-arrow"></span>
@@ -104,6 +135,9 @@ export default class SortableTable {
     const element = wrapper.firstElementChild;
 
     this.element = element;
+
+    this.subElements = this.getSubElements();
+
   }
 
   sortData(fieldValue, orderValue) {
@@ -137,6 +171,21 @@ export default class SortableTable {
     const sortedData = this.sortData(fieldValue, orderValue);
     const sortedTableBody = this.getTableBody(sortedData);
     this.subElements.body.innerHTML = sortedTableBody;
+
+    // remove sorting arrow from other columns
+    for (let child of this.subElements.header.children) {
+      if (child.dataset.name === fieldValue) {
+        continue;
+      }
+      child.dataset.order = "";
+    }
+  }
+
+  initializeSorting(columnName="quantity", order="asc") {
+    const headerElements = Array.from(this.subElements.header.children);
+    let headerColumnElement = headerElements.find(item => item.dataset.name === columnName);
+    this.sort(columnName, order);
+    headerColumnElement.dataset.order = "asc";
   }
 
   remove () {
