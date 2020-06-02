@@ -2,6 +2,27 @@ export default class SortableTable {
   element;
   subElements = {};
 
+  onClickSort = (event) => {
+    const targetHeaderCell = event.currentTarget;
+    const cellName = targetHeaderCell.dataset.name;
+
+    const doSorting = (sortingOrder) => {
+      this.sort(cellName, sortingOrder);
+      targetHeaderCell.dataset.order = sortingOrder;
+    }
+
+    switch (targetHeaderCell.dataset.order) {
+      case "asc":
+        doSorting("desc");
+        break;
+      case "desc":
+        doSorting("asc");
+        break;
+      default:
+        doSorting("asc");
+    }
+  }
+
   constructor(headerData, { data } = {}, initSortColumnName) {
     this.headerData = headerData;
     this.initSortColumnName = initSortColumnName;
@@ -13,31 +34,17 @@ export default class SortableTable {
   }
 
   initEventListeners() {
-
-    const eventListenerCallback = (event) => {
-      const targetDiv = event.path.find(item => item.dataset.name);
-      const columnName = targetDiv.dataset.name;
-
-      const doSorting = (sortingOrder) => {
-        this.sort(columnName, sortingOrder);
-        targetDiv.dataset.order = sortingOrder;
-      }
-
-      switch (targetDiv.dataset.order) {
-        case "asc":
-          doSorting("desc");
-          break;
-        case "desc":
-          doSorting("asc");
-          break;
-        default:
-          doSorting("asc");
-      }
-    }
-
     for (let item of this.subElements.header.children) {
       if (item.dataset.sortable === "true") {
-        item.addEventListener("click", eventListenerCallback);
+        item.addEventListener("click", this.onClickSort);
+      }
+    }
+  }
+
+  removeEventListeners() {
+    for (let item of this.subElements.header.children) {
+      if (item.dataset.sortable === "true") {
+        item.removeEventListener("click", this.onClickSort);
       }
     }
   }
@@ -201,11 +208,13 @@ export default class SortableTable {
   }
 
   remove () {
+    this.removeEventListeners();
     this.element.remove();
   }
 
   destroy() {
-    this.remove();
+    this.removeEventListeners();
     this.subElements = {};
+    this.remove();
   }
 }
