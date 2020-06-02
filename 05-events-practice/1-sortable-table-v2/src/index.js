@@ -2,13 +2,14 @@ export default class SortableTable {
   element;
   subElements = {};
 
-  constructor(headerData, { data } = {}) {
+  constructor(headerData, { data } = {}, initSortColumnName) {
     this.headerData = headerData;
+    this.initSortColumnName = initSortColumnName;
     this.data = data;
     this._getTableHeaderCells();
     this.render();
     this.initEventListeners();
-    this.initializeSorting();
+    this.initializeSorting(initSortColumnName);
   }
 
   initEventListeners() {
@@ -146,21 +147,17 @@ export default class SortableTable {
       asc: 1,
       desc: -1
     }
-    let sortType;
-    const column = this.headerData.find(item => item.id === fieldValue && item.sortable === true);
-
-    if (column) {
-      ({ sortType } = column);
-    } else {
-      throw new Error("item is not sortable");
-    }
+    const column = this.headerData.find(item => item.id === fieldValue);
+    const {sortType, customSorting} = column;
 
     return [...arr].sort((a,b) => {
       switch (sortType) {
         case "string":
           return direction[orderValue] * a[fieldValue].localeCompare(b[fieldValue], 'ru', { caseFirst: "upper"})
         case "number":
-          return direction[orderValue] * (a[fieldValue] - b[fieldValue])      
+          return direction[orderValue] * (a[fieldValue] - b[fieldValue])
+        case "custom":
+          return direction[orderValue] * customSorting(a, b);
         default:
           return direction[orderValue] * (a[fieldValue] - b[fieldValue])
       }
@@ -181,9 +178,24 @@ export default class SortableTable {
     }
   }
 
-  initializeSorting(columnName="quantity", order="asc") {
+  initializeSorting(columnName, order="asc") {
     const headerElements = Array.from(this.subElements.header.children);
-    let headerColumnElement = headerElements.find(item => item.dataset.name === columnName);
+    let sortableColumnNames = [];
+    let headerColumnElement = [];
+
+    //if columnName is not supplied, pick up middle element of sortable columns for initial sort
+    if (!columnName) {
+      sortableColumnNames = headerElements.reduce((accumulator, item) => {
+        if (item.dataset.sortable === "true") {
+          accumulator.push(item.dataset.name);
+        }
+        return accumulator;
+      }, []);
+
+      columnName = sortableColumnNames[Math.round(sortableColumnNames.length / 2 - 1)];
+    }
+
+    headerColumnElement = headerElements.find(item => item.dataset.name === columnName);
     this.sort(columnName, order);
     headerColumnElement.dataset.order = "asc";
   }
