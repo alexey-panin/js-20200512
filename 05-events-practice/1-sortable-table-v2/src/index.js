@@ -3,7 +3,10 @@ export default class SortableTable {
   subElements = {};
 
   onClickSort = (event) => {
-    const targetHeaderCell = event.currentTarget;
+    const targetHeaderCell = event.target.closest("div");
+
+    if ( !targetHeaderCell || !(targetHeaderCell.dataset.sortable === "true") ) return;
+
     const cellName = targetHeaderCell.dataset.name;
 
     const doSorting = (sortingOrder) => {
@@ -34,19 +37,11 @@ export default class SortableTable {
   }
 
   initEventListeners() {
-    for (let item of this.subElements.header.children) {
-      if (item.dataset.sortable === "true") {
-        item.addEventListener("click", this.onClickSort);
-      }
-    }
+    document.addEventListener("click", this.onClickSort);
   }
 
   removeEventListeners() {
-    for (let item of this.subElements.header.children) {
-      if (item.dataset.sortable === "true") {
-        item.removeEventListener("click", this.onClickSort);
-      }
-    }
+    document.removeEventListener("click", this.onClickSort);
   }
 
   _getTableHeaderCells() {
