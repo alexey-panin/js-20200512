@@ -2,17 +2,33 @@ class Tooltip {
   element = null;
   elementWithTooltip = null;
 
-  onPointerOverShowTooltip = (event) => {
-    const tooltipData = event.target.dataset.tooltip;
-    this.render(tooltipData, event.clientX, event.clientY);
+  elementOnPointerOverShowTooltip = (event) => {
+    console.log("element pointer over");
+
+/*     const target = event.target;
+    const tooltipHtml = target.dataset.tooltip;
+
+    //if (this.elementWithTooltip === target) return;
+
+    this.render(tooltipHtml, event.clientX, event.clientY);
+
+    this.elementWithTooltip = target; */
 
   }
 
-  onPointerOutRemoveTooltip = () => {
+  elementOnPointerOutRemoveTooltip = (event) => {
+    console.log("element pointer out");
+    console.log(event.target);
+    console.log(event.relatedTarget);
+    if (this.element) {
+      this.remove();
+      this.element = null;
+      this.elementWithTooltip = null;
+    }
 
   }
 
-  onPointerMoveShowTooltip = (event) => {
+  elementOnPointerMoveShowTooltip = (event) => {
 
 /*     let relatedTarget = event.relatedTarget;
 
@@ -26,9 +42,9 @@ class Tooltip {
       relatedTarget = relatedTarget.parentNode;
     } */
 
-    console.log("pointer move");
+    console.log("element pointer move");
 
-    this.element.style.cssText = `left: ${event.clientX}px; top: ${event.clientY}px;`
+    this.element.style.cssText = `left: ${event.clientX + 10}px; top: ${event.clientY + 10}px;`
   }
 
   remove = () => {
@@ -38,61 +54,57 @@ class Tooltip {
   }
 
   documentOnPointerOverShowTooltip = (event) => {
-    if (event.target.dataset.tooltip) {
+    const target = event.target;
 
-      const tooltipHtml = event.target.dataset.tooltip;
-      const target = event.target;
+    if (target.dataset.tooltip) {
 
-      if (this.elementWithTooltip === target) return;
-  
-      this.render(tooltipHtml, event.clientX, event.clientY);
-  
-      target.addEventListener("pointermove", this.onPointerMoveShowTooltip);
+      // create only initial tooltip element by global event handler
+      // other creates within divs will be handled by element handlers
+      if (!this.element) {
+        const tooltipHtml = target.dataset.tooltip;
+        this.render(tooltipHtml, event.clientX, event.clientY);   
+        this.elementWithTooltip = target;
+      }
 
-      this.elementWithTooltip = target;
+      target.addEventListener("pointerover", this.elementOnPointerOverShowTooltip);
+      target.addEventListener("pointermove", this.elementOnPointerMoveShowTooltip);
+      target.addEventListener("pointerout", this.elementOnPointerOutRemoveTooltip);
 
-      console.log("document pointer over");
+ /*      this.elementWithTooltip = target; */
+
+      console.log("global document pointer over");
     }
 
     //console.log(event.target);
-    //event.target.addEventListener("pointerover", this.onPointerOverShowTooltip);
-    //event.target.addEventListener("pointermove", this.onPointerMoveShowTooltip);
-    //event.target.removeEventListener("pointerout", this.onPointerOverShowTooltip);
+    //event.target.addEventListener("pointerover", this.elementOnPointerOverShowTooltip);
+    //event.target.addEventListener("pointermove", this.elementOnPointerMoveShowTooltip);
+    //event.target.removeEventListener("pointerout", this.elementOnPointerOverShowTooltip);
     //event.target.addEventListener("pointerout", this.remove);
   }
 
   documentOnPointerOutRemoveTooltip = (event) => {
+    // элемент с которого ушел курсор
+    const target = event.target;
+    // элемент на который ушел курсор
+    const elementLeaveTo = event.relatedTarget;
 
-    //let target = event.target;
-    const tooltipAnchorElement = event.target.closest('[data-tooltip]');
+    // если курсор ушел на другой элемент с тултипом, удалять тултип глобальным обработчиком не надо
+    //if (elementLeaveTo !== null && elementLeaveTo.dataset.tooltip) return;
 
-    if (!tooltipAnchorElement) return;
-    console.log(tooltipAnchorElement);
-
-    console.log(event.relatedTarget);
-
-/*     while (relatedTarget) {
-      // поднимаемся по дереву элементов и проверяем – внутри ли мы currentElem или нет
-      // если да, то это переход внутри элемента – игнорируем
-      if (relatedTarget === this.elementWithTooltip) return;
-  
-      relatedTarget = relatedTarget.parentNode;
-    } */
-
-    //if (target === this.elementWithTooltip) return;
-
-    // если курсор покинул элемент внутри того же самого дива, игнорируем
-    //if (tooltipAnchorElement === this.elementWithTooltip) return;
-    console.log(tooltipAnchorElement === this.elementWithTooltip);
-
-
-    console.log("document pointer out");
-
+    console.log("global pointer out");
+    // иначе удаляем элемент если он есть
     if (this.element) {
       this.remove();
       this.element = null;
       this.elementWithTooltip = null;
     }
+
+    // TODO cursor went away from all divs how to delete all the event listeners
+
+    // и удаляем ранее навешанные обработчики событий с элемента с которого ушли
+    target.removeEventListener("pointerover", this.elementOnPointerOverShowTooltip);
+    target.removeEventListener("pointermove", this.elementOnPointerMoveShowTooltip);
+    target.removeEventListener("pointerout", this.elementOnPointerOutRemoveTooltip);
   }
 
   constructor() {
