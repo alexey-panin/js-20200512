@@ -1,24 +1,32 @@
 class Tooltip {
   element = null;
+  tooltipShiftFromCursor = 7;
 
   elementOnPointerMoveShowTooltip = (event) => {
-    this.element.style.cssText = `left: ${event.clientX + 10}px; top: ${event.clientY + 10}px;`
+    this.element.style.cssText = `left: ${event.clientX + this.tooltipShiftFromCursor}px; top: ${event.clientY + this.tooltipShiftFromCursor}px;`
   }
 
   documentOnPointerOverShowTooltip = (event) => {
-    const target = event.target;
+    //const target = event.target;
+    const { target } = event;
 
     if (target.dataset.tooltip) {
       const tooltipHtml = target.dataset.tooltip;
 
-      this.render(tooltipHtml, event.clientX, event.clientY);   
+      this.render(tooltipHtml, 
+        {
+          coordinateX: event.clientX,
+          coordinateY: event.clientY
+        }
+      );   
       target.addEventListener("pointermove", this.elementOnPointerMoveShowTooltip);
     }
   }
 
   documentOnPointerOutRemoveTooltip = (event) => {
     // элемент с которого ушел курсор
-    const elementFrom = event.target;
+    //const elementFrom = event.target;
+    const { target: elementFrom } = event;
 
     if (this.element) {
       this.remove();
@@ -47,11 +55,11 @@ class Tooltip {
     this.element = null;
   }
 
-  render(tooltipData, coordinateX, coordinateY) {
+  render(tooltipData, coordinates) {
 
     const wrapper = document.createElement('div');
 
-    wrapper.innerHTML = this.getTooltip(tooltipData, coordinateX, coordinateY);
+    wrapper.innerHTML = this.getTooltip(tooltipData, coordinates);
 
     const element = wrapper.firstElementChild;
 
@@ -61,9 +69,9 @@ class Tooltip {
 
   }
 
-  getTooltip(tooltipMessage, coordinateX, coordinateY) {
+  getTooltip(tooltipMessage, { coordinateX, coordinateY } = {}) {
     return `
-      <div class="tooltip" style="left: ${coordinateX + 10}px; top: ${coordinateY + 10}px;">${tooltipMessage}</div>
+      <div class="tooltip" style="left: ${coordinateX + this.tooltipShiftFromCursor}px; top: ${coordinateY + this.tooltipShiftFromCursor}px;">${tooltipMessage}</div>
     `;
   }
 
