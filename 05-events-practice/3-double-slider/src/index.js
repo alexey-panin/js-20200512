@@ -1,6 +1,10 @@
 export default class DoubleSlider {
   element;
 
+  /**
+   * WORK IN PROGRESS, DO NOT CHECK YET
+   */
+
   constructor(
     { 
       min = 0, 
