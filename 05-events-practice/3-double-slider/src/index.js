@@ -5,6 +5,14 @@ export default class DoubleSlider {
    * WORK IN PROGRESS, DO NOT CHECK YET
    */
 
+  onDragStart = (event) => {
+    event.preventDefault();
+
+    const dragable = event.target;
+    let shiftX = event.clientX - dragable.getBoundingClientRect().left;
+    console.log(shiftX);
+  }
+
   constructor(
     { 
       min = 0, 
@@ -18,6 +26,15 @@ export default class DoubleSlider {
     this.formatValue = formatValue;
     this.selected = selected;
     this.render();
+    this.initEventListeneres();
+  }
+
+  initEventListeneres() {
+    const thumbLeft = this.subElements.thumb_left;
+    const thumbRight = this.subElements.thumb_right;
+
+    thumbLeft.addEventListener("pointerdown", this.onDragStart);
+    thumbRight.addEventListener("pointerdown", this.onDragStart);
   }
 
   getSliderTemplate(min, max, formatValue, {from, to} = {}) {
@@ -29,8 +46,8 @@ export default class DoubleSlider {
         <span data-element="min">${formatValue(min)}</span>
         <div class="range-slider__inner">
           <span data-element="progress" class="range-slider__progress" style="left: ${thumbLeft}%; right: ${thumbRight}%"></span>
-          <span data-element="thumb-left" class="range-slider__thumb-left" style="left: ${thumbLeft}%"></span>
-          <span data-element="thumb-right" class="range-slider__thumb-right" style="right: ${thumbRight}%"></span>
+          <span data-element="thumb_left" class="range-slider__thumb-left" style="left: ${thumbLeft}%"></span>
+          <span data-element="thumb_right" class="range-slider__thumb-right" style="right: ${thumbRight}%"></span>
         </div>
         <span data-element="max">${formatValue(max)}</span>
       </div>
@@ -55,7 +72,6 @@ export default class DoubleSlider {
     const elements = element.querySelectorAll('[data-element]');
 
     return [...elements].reduce((accum, subElement) => {
-      console.log(subElement);
       accum[subElement.dataset.element] = subElement;
 
       return accum;
