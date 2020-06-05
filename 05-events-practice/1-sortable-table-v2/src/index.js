@@ -3,11 +3,12 @@ export default class SortableTable {
   subElements = {};
 
   onClickSort = (event) => {
-    const targetHeaderCell = event.target.closest("div");
+    const targetHeaderCell = event.target.closest('[data-sortable="true"]');
 
-    if ( !targetHeaderCell || !(targetHeaderCell.dataset.sortable === "true") ) return;
+    if (!targetHeaderCell) return;
 
-    const cellName = targetHeaderCell.dataset.name;
+    //const cellName = targetHeaderCell.dataset.name;
+    const { name: cellName } = targetHeaderCell.dataset;
 
     const doSorting = (sortingOrder) => {
       this.sort(cellName, sortingOrder);
@@ -181,13 +182,12 @@ export default class SortableTable {
   }
 
   initializeSorting(columnName, order="asc") {
-    const headerElements = Array.from(this.subElements.header.children);
-    let sortableColumnNames = [];
-    let headerColumnElement = [];
+    //const headerElements = Array.from(this.subElements.header.children);
+    const headerElements = [...this.subElements.header.children];
 
     //if columnName is not supplied, pick up middle element of sortable columns for initial sort
     if (!columnName) {
-      sortableColumnNames = headerElements.reduce((accumulator, item) => {
+      const sortableColumnNames = headerElements.reduce((accumulator, item) => {
         if (item.dataset.sortable === "true") {
           accumulator.push(item.dataset.name);
         }
@@ -197,7 +197,7 @@ export default class SortableTable {
       columnName = sortableColumnNames[Math.round(sortableColumnNames.length / 2 - 1)];
     }
 
-    headerColumnElement = headerElements.find(item => item.dataset.name === columnName);
+    const headerColumnElement = headerElements.find(item => item.dataset.name === columnName);
     this.sort(columnName, order);
     headerColumnElement.dataset.order = "asc";
   }
