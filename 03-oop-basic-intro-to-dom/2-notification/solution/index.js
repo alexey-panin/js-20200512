@@ -6,7 +6,9 @@ export default class NotificationMessage {
     type = 'success',
   } = {}) {
 
-    if (NotificationMessage.activeNotification) {
+    clearTimeout(NotificationMessage.timeoutId);
+
+    if (NotificationMessage.activeNotification) { // null
       NotificationMessage.activeNotification.remove();
     }
 
@@ -45,7 +47,7 @@ export default class NotificationMessage {
 
     root.append(this.element);
 
-    setTimeout(() => {
+    NotificationMessage.timeoutId = setTimeout(() => {
       this.remove();
     }, this.duration);
   }
