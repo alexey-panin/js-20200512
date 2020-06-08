@@ -38,11 +38,11 @@ export default class SortableTable {
   }
 
   initEventListeners() {
-    document.addEventListener("click", this.onClickSort);
+    this.subElements.header.addEventListener("click", this.onClickSort);
   }
 
   removeEventListeners() {
-    document.removeEventListener("click", this.onClickSort);
+    this.subElements.header.removeEventListener("click", this.onClickSort);
   }
 
   _getTableHeaderCells() {
