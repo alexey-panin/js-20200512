@@ -8,15 +8,15 @@ class Tooltip {
 
   documentOnPointerOverShowTooltip = (event) => {
     //const target = event.target;
-    const { target } = event;
+    const { target, clientX, clientY } = event;
 
     if (target.dataset.tooltip) {
       const tooltipHtml = target.dataset.tooltip;
 
       this.render(tooltipHtml, 
         {
-          coordinateX: event.clientX,
-          coordinateY: event.clientY
+          coordinateX: clientX,
+          coordinateY: clientY
         }
       );   
       target.addEventListener("pointermove", this.elementOnPointerMoveShowTooltip);
