@@ -6,6 +6,7 @@ export default class ColumnChart {
   chartHeight = 50;
 
   constructor({
+    baseUrl = "https://course-js.javascript.ru/",
     url = 'api/dashboard/sales',
     range = 
     {
@@ -24,34 +25,40 @@ export default class ColumnChart {
     this.link = link;
     this.formatHeading = formatHeading;
     this.value = value;
-    //TODO: TEMPORARY. figure out about this base url
-    this.baseUrl = "https://course-js.javascript.ru/";
+    this.baseUrl = baseUrl;
     
     this.render();
     this.getData();
   }
 
   async getData() {
-    // mockup
-    //this.data = [21, 21, 3, 19, 21, 7, 13, 20, 15, 5, 18, 18, 4, 13, 19, 13, 7, 22, 19, 4, 22, 19, 3, 23, 16, 4, 17, 19, 2, 20, 17];
-    const { from, to } = this.range;
-    const fetchUrl = `${this.baseUrl}${this.url}?from=${from}&to=${to}`
+    const fetchUrl = this.getFetchUrl();
 
     try {
       const response = await fetchJson(fetchUrl);
       this.data = Object.values(response);      
     } catch (error) {
+      //TODO: do something better than console.log
       console.log(error);      
     }
 
     const arrSum = arr => arr.reduce((a, b) => a + b, 0);
-
     this.value = arrSum(this.data);
 
-    this.update({
+    this.updateChart({
       headerData: this.value,
       bodyData: this.data
     });
+  }
+
+  getFetchUrl() {
+    const { from, to } = this.range;
+
+    const url = new URL(this.url, this.baseUrl);
+    url.searchParams.set("from", from.toJSON());
+    url.searchParams.set("to", to.toJSON());
+
+    return url;
   }
 
   getColumnBody(data) {
@@ -114,7 +121,15 @@ export default class ColumnChart {
     }, {});
   }
 
-  update({headerData, bodyData}) {
+  update(from = null, to = null) {
+    if (from && to) {
+      this.range.from = from;
+      this.range.to = to;
+      this.getData();
+    }
+  }
+
+  updateChart({headerData, bodyData}) {
     this.subElements.header.textContent = this.formatHeading(headerData);
     this.subElements.body.innerHTML = this.getColumnBody(bodyData);
 
