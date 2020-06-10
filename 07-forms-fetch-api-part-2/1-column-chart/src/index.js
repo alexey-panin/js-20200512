@@ -32,18 +32,26 @@ export default class ColumnChart {
   }
 
   async getData() {
-    this.data = [21, 21, 3, 19, 21, 7, 13, 20, 15, 5, 18, 18, 4, 13, 19, 13, 7, 22, 19, 4, 22, 19, 3, 23, 16, 4, 17, 19, 2, 20, 17];
-    this.render();
-/*     const { from, to } = this.range;
+    // mockup
+    //this.data = [21, 21, 3, 19, 21, 7, 13, 20, 15, 5, 18, 18, 4, 13, 19, 13, 7, 22, 19, 4, 22, 19, 3, 23, 16, 4, 17, 19, 2, 20, 17];
+    const { from, to } = this.range;
     const fetchUrl = `${this.baseUrl}${this.url}?from=${from}&to=${to}`
 
     try {
       const response = await fetchJson(fetchUrl);
       this.data = Object.values(response);      
-      this.render();
     } catch (error) {
       console.log(error);      
-    } */
+    }
+
+    const arrSum = arr => arr.reduce((a, b) => a + b, 0);
+
+    this.value = arrSum(this.data);
+
+    this.update({
+      headerData: this.value,
+      bodyData: this.data
+    });
   }
 
   getColumnBody(data) {
@@ -72,7 +80,7 @@ export default class ColumnChart {
         </div>
         <div class="column-chart__container">
           <div data-element="header" class="column-chart__header">
-            ${this.value}
+            ${this.formatHeading(this.value)}
           </div>
           <div data-element="body" class="column-chart__chart">
             ${this.getColumnBody(this.data)}
@@ -83,7 +91,6 @@ export default class ColumnChart {
   }
 
   render() {
-    console.log(this.data);
     const element = document.createElement('div');
 
     element.innerHTML = this.template;
@@ -108,8 +115,12 @@ export default class ColumnChart {
   }
 
   update({headerData, bodyData}) {
-    this.subElements.header.textContent = headerData;
+    this.subElements.header.textContent = this.formatHeading(headerData);
     this.subElements.body.innerHTML = this.getColumnBody(bodyData);
+
+    if (bodyData.length) {
+      this.element.classList.remove('column-chart_loading');
+    }
   }
 
   remove () {
