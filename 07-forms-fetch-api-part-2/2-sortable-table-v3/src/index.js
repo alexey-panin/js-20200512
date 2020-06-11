@@ -43,7 +43,7 @@ export default class SortableTable {
     }
   }
 
-  constructor(headerData, { url } = {}, initSortColumnName) {
+  constructor(headerData, { url, initSortColumnName } = {}) {
     this.headerData = headerData;
     this.data = null;
     this.url = url;
