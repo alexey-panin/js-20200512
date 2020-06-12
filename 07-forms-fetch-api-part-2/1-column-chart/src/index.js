@@ -121,12 +121,13 @@ export default class ColumnChart {
     }, {});
   }
 
-  update(from = null, to = null) {
+  async update(from = null, to = null) {
     if (from && to) {
       this.range.from = from;
       this.range.to = to;
-      this.getData();
+      await this.getData();
     }
+    return this.data; // для тестов
   }
 
   updateChart({headerData, bodyData}) {
