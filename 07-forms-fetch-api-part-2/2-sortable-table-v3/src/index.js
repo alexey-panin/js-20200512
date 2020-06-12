@@ -201,13 +201,19 @@ export default class SortableTable {
 
   getFetchUrl({columnName, order, start = 0, end = 30}) {
     const url = new URL(this.url, BACKEND_URL);
-    
-    url.searchParams.set("_sort", columnName);
-    url.searchParams.set("_order", order);
-    url.searchParams.set("_start", start);
-    url.searchParams.set("_end", end);
 
-    return url;
+    const searchQueryParams = {
+      _sort: columnName,
+      _order: order,
+      _start: start,
+      _end: end
+    }
+
+    for (let [param, val] of Object.entries(searchQueryParams)) {
+      url.searchParams.set(param, val);
+    }
+
+    return url.toString();
   }
 
     // not needed now as sorting is done on backend side
@@ -242,12 +248,10 @@ export default class SortableTable {
   }
 
   remove () {
-    this.removeEventListeners();
     this.element.remove();
   }
 
   destroy() {
-    this.removeEventListeners();
     this.subElements = {};
     this.remove();
   }
