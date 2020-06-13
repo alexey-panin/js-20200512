@@ -17,16 +17,21 @@ export default class ProductForm {
     this.productId = productId;
     //TODO: fix this when productEditMode is false
     this.productEditMode = Boolean(this.productId);
-    this.url = url
+    this.productsUrl = url;
+    //TODO: where better to put it? Should it come as a params when creating a new ProductForm?
+    this.categoriesUrl = "api/rest/categories";
   }
 
   async render() {
 
     const wrapper = document.createElement('div');
 
-    //get categories goes here
+    //TODO: use promise.all
 
-    this.productData = await this.getData(this.productId);
+    const categ = await this.getData(this.categoriesUrl, {_sort: "weight", _regs: "subcategory"});
+    console.log(categ);
+
+    this.productData = await this.getData(this.productsUrl, {id: this.productId});
 
     wrapper.innerHTML = this.getFormTemplate(this.productData, this.categories);
 
@@ -40,16 +45,19 @@ export default class ProductForm {
 
   }
 
-  async getData(productId) {
-    const fetchUrl = this.getFetchUrl(productId);
+  async getData(url, searchQueryParams) {
+    const fetchUrl = this.getFetchUrl(url, searchQueryParams);
     const response = await fetchJson(fetchUrl);
     return response;
   }
 
-  getFetchUrl(productId) {
-    const url = new URL(this.url, BACKEND_URL);
-    url.searchParams.set("id", productId);
-    return url
+  getFetchUrl(url, searchQueryParams) {
+    const fetchUrl = new URL(url, BACKEND_URL);
+    for (let [param, val] of Object.entries(searchQueryParams)) {
+      fetchUrl.searchParams.set(param, val);
+    }
+    console.log(fetchUrl);
+    return fetchUrl;
   }
 
   getSubElements(element = this.element) {
