@@ -13,22 +13,23 @@ export default class ProductForm {
   categoryData = categoryData;
 
   constructor(productId) {
-    console.log(this.productData);
-    console.log(this.categoryData);
     this.productId = productId;
+    this.productEditMode = Boolean(this.productId);
   }
 
   render() {
 
     const wrapper = document.createElement('div');
 
-    wrapper.innerHTML = this.getFormTemplate(this.productData[0], Boolean(this.productId));
+    wrapper.innerHTML = this.getFormTemplate(this.productData);
 
     const element = wrapper.firstElementChild;
 
     this.element = element;
 
     this.subElements = this.getSubElements();
+    console.log(this.productData);
+    console.log(this.categoryData);
 
   }
 
@@ -42,11 +43,11 @@ export default class ProductForm {
     }, {});
   }
 
-  getFormTemplate(data, productEditMode = false) {
+  getFormTemplate([productData]) {
     return `
     <div class="product-form">
       <form data-element="productForm" class="form-grid">
-        ${this.getTitleTemplate(data, productEditMode)}
+        ${this.getTitleTemplate(productData)}
         ${this.getDescriptionTemplate()}
         ${this.getSortableListContainerTemplate()}
       </form>
@@ -54,12 +55,12 @@ export default class ProductForm {
     `;
   }
 
-  getTitleTemplate(data, productEditMode) {
+  getTitleTemplate(productData) {
     return `
       <div class="form-group form-group__half_left">
         <fieldset>
           <label class="form-label">Название товара</label>
-          <input required="" type="text" name="title" class="form-control" placeholder="Название товара" value=${productEditMode ? escapeHtml(data.title) : ""}>
+          <input required="" type="text" name="title" class="form-control" placeholder="Название товара" value=${this.productEditMode ? escapeHtml(productData.title) : ""}>
         </fieldset>
       </div>
     `;
