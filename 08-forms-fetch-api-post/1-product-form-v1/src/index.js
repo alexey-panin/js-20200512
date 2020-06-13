@@ -1,7 +1,6 @@
 //import SortableList from '../../../09-tests-routes-browser-history-api/2-sortable-list/solution/index.js';
 import escapeHtml from './utils/escape-html.js';
 import fetchJson from './utils/fetch-json.js';
-import categories from './categories.js';
 
 const IMGUR_CLIENT_ID = '28aaa2e823b03b1';
 const BACKEND_URL = 'https://course-js.javascript.ru';
@@ -10,7 +9,7 @@ export default class ProductForm {
   element; //html element
   productData = null;
   // TODO: check is there is sence to include imported staff as a class property?
-  categories = categories;
+  categories = null;
 
   // TODO: check if it is a good place for url param or it should be put outside of class
   constructor(productId, url = "api/rest/products") {
@@ -24,14 +23,9 @@ export default class ProductForm {
 
   async render() {
 
+    [this.categories, this.productData] = await this.getAllData();
+
     const wrapper = document.createElement('div');
-
-    //TODO: use promise.all
-
-    const categ = await this.getData(this.categoriesUrl, {_sort: "weight", _regs: "subcategory"});
-    console.log(categ);
-
-    this.productData = await this.getData(this.productsUrl, {id: this.productId});
 
     wrapper.innerHTML = this.getFormTemplate(this.productData, this.categories);
 
@@ -40,12 +34,20 @@ export default class ProductForm {
     this.element = element;
 
     this.subElements = this.getSubElements();
-    console.log(this.productData);
-    console.log(this.categories);
 
   }
 
-  async getData(url, searchQueryParams) {
+  async getAllData() {
+    const categoriesRequest = this.getSingleData(this.categoriesUrl, {_sort: "weight", _regs: "subcategory"});
+    const productDataRequest = this.getSingleData(this.productsUrl, {id: this.productId});
+
+    return await Promise.all([categoriesRequest, productDataRequest])
+      .then(responses => {
+        return responses;
+      });
+  }
+
+  async getSingleData(url, searchQueryParams) {
     const fetchUrl = this.getFetchUrl(url, searchQueryParams);
     const response = await fetchJson(fetchUrl);
     return response;
@@ -56,7 +58,6 @@ export default class ProductForm {
     for (let [param, val] of Object.entries(searchQueryParams)) {
       fetchUrl.searchParams.set(param, val);
     }
-    console.log(fetchUrl);
     return fetchUrl;
   }
 
@@ -70,6 +71,8 @@ export default class ProductForm {
     }, {});
   }
 
+  //          ${this.getProductCategoriesTemplate(categories)}
+
   getFormTemplate([productData], categories) {
     return `
       <div class="product-form">
@@ -77,7 +80,6 @@ export default class ProductForm {
           ${this.getTitleTemplate(productData)}
           ${this.getDescriptionTemplate(productData)}
           ${this.getSortableListContainerTemplate(productData)}
-          ${this.getProductCategoriesTemplate(categories)}
           ${this.getProductPriceDiscountTemplate(productData)}
           ${this.getProductQuantityTemplate(productData)}
           ${this.getProductStatusTemplate(productData)}
