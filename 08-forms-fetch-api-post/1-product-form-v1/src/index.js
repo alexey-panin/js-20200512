@@ -38,7 +38,7 @@ export default class ProductForm {
   }
 
   async getAllData() {
-    const categoriesRequest = this.getSingleData(this.categoriesUrl, {_sort: "weight", _regs: "subcategory"});
+    const categoriesRequest = this.getSingleData(this.categoriesUrl, {_sort: "weight", _refs: "subcategory"});
     const productDataRequest = this.getSingleData(this.productsUrl, {id: this.productId});
 
     return await Promise.all([categoriesRequest, productDataRequest])
@@ -71,8 +71,6 @@ export default class ProductForm {
     }, {});
   }
 
-  //          ${this.getProductCategoriesTemplate(categories)}
-
   getFormTemplate([productData], categories) {
     return `
       <div class="product-form">
@@ -80,6 +78,7 @@ export default class ProductForm {
           ${this.getTitleTemplate(productData)}
           ${this.getDescriptionTemplate(productData)}
           ${this.getSortableListContainerTemplate(productData)}
+          ${this.getProductCategoriesTemplate(productData, categories)}
           ${this.getProductPriceDiscountTemplate(productData)}
           ${this.getProductQuantityTemplate(productData)}
           ${this.getProductStatusTemplate(productData)}
@@ -153,16 +152,19 @@ export default class ProductForm {
       }).join("");
   }
 
-  getProductCategoriesTemplate(categories) {
+  getProductCategoriesTemplate({subcategory: productSubcategory}, categories) {
     return `
       <div class="form-group form-group__half_left">
         <label class="form-label">Категория</label>
         <select class="form-control" name="subcategory">
         ${categories
-          .map( ({text, value}) => {
-            return `
-              <option value="${value}">${escapeHtml(text)}</option>
-            `;
+          .map( ({title: categotyTitle, subcategories}) => {
+            return subcategories
+              .map( ({id: subcategoryId, title: subcategoryTitle}) => {
+                return `
+                  <option ${(productSubcategory === subcategoryId) ? "selected" : ""} value="${this.productEditMode ? subcategoryId : ""}">${this.productEditMode ? categotyTitle : ""} &gt; ${this.productEditMode ? subcategoryTitle : ""}</option>
+                `;
+              });
           }).join("")}
         </select>
       </div>
