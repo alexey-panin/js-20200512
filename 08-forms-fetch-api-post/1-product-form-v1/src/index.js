@@ -15,6 +15,7 @@ export default class ProductForm {
   constructor(productId, url = "api/rest/products") {
     this.productId = productId;
     //TODO: fix this when productEditMode is false
+    //this.productEditMode = Boolean(this.productId);
     this.productEditMode = Boolean(this.productId);
     this.productsUrl = url;
     //TODO: where better to put it? Should it come as a params when creating a new ProductForm?
@@ -23,11 +24,15 @@ export default class ProductForm {
 
   async render() {
 
-    [this.categories, this.productData] = await this.getAllData();
-
     const wrapper = document.createElement('div');
 
-    wrapper.innerHTML = this.getFormTemplate(this.productData, this.categories);
+    [this.categories, this.productData] = await this.getAllData(this.productEditMode);
+
+    if (this.productEditMode) {
+      wrapper.innerHTML = this.getFormTemplate(this.productData, this.categories);
+    } else {
+      wrapper.innerHTML = this.getFormTemplateWithPlaceholders(this.categories);
+    }
 
     const element = wrapper.firstElementChild;
 
@@ -37,11 +42,16 @@ export default class ProductForm {
 
   }
 
-  async getAllData() {
-    const categoriesRequest = this.getSingleData(this.categoriesUrl, {_sort: "weight", _refs: "subcategory"});
-    const productDataRequest = this.getSingleData(this.productsUrl, {id: this.productId});
+  async getAllData(productEditMode) {
+    const requests = [
+      this.getSingleData(this.categoriesUrl, {_sort: "weight", _refs: "subcategory"})
+    ]
 
-    return await Promise.all([categoriesRequest, productDataRequest])
+    if (productEditMode) {
+      requests.push(this.getSingleData(this.productsUrl, {id: this.productId}));
+    }
+
+    return await Promise.all(requests)
       .then(responses => {
         return responses;
       });
@@ -78,7 +88,7 @@ export default class ProductForm {
           ${this.getTitleTemplate(productData)}
           ${this.getDescriptionTemplate(productData)}
           ${this.getSortableListContainerTemplate(productData)}
-          ${this.getProductCategoriesTemplate(productData, categories)}
+          ${this.getProductCategoriesTemplate(categories, productData)}
           ${this.getProductPriceDiscountTemplate(productData)}
           ${this.getProductQuantityTemplate(productData)}
           ${this.getProductStatusTemplate(productData)}
@@ -97,7 +107,7 @@ export default class ProductForm {
       <div class="form-group form-group__half_left">
         <fieldset>
           <label class="form-label">Название товара</label>
-          <input required="" type="text" name="title" class="form-control" placeholder="Название товара" value="${this.productEditMode ? escapeHtml(title) : ""}">
+          <input required="" type="text" name="title" class="form-control" placeholder="Название товара" value="${escapeHtml(title)}">
         </fieldset>
       </div>
     `;
@@ -107,7 +117,7 @@ export default class ProductForm {
     return `
       <div class="form-group form-group__wide">
         <label class="form-label">Описание</label>
-        <textarea required="" class="form-control" name="description" data-element="productDescription" placeholder="Описание товара">${this.productEditMode ? escapeHtml(description) : ""}"</textarea>
+        <textarea required="" class="form-control" name="description" data-element="productDescription" placeholder="Описание товара">${escapeHtml(description)}"</textarea>
       </div>
     `;
   }
@@ -137,12 +147,12 @@ export default class ProductForm {
       .map( ({url, source}) => {
         return `
           <li class="products-edit__imagelist-item sortable-list__item" style="">
-            <input type="hidden" name="url" value="${this.productEditMode ? url : ""}">
-            <input type="hidden" name="source" value="${this.productEditMode ? source : ""}">
+            <input type="hidden" name="url" value="${url}">
+            <input type="hidden" name="source" value="${source}">
             <span>
               <img src="icon-grab.svg" data-grab-handle alt="grab">
-              <img class="sortable-table__cell-img" alt="Image" src="${this.productEditMode ? url : ""}">
-              <span>${this.productEditMode ? source : ""}</span>
+              <img class="sortable-table__cell-img" alt="Image" src="${url}">
+              <span>${source}</span>
             </span>
             <button type="button">
               <img src="icon-trash.svg" data-delete-handle alt="delete">
@@ -152,7 +162,11 @@ export default class ProductForm {
       }).join("");
   }
 
-  getProductCategoriesTemplate({subcategory: productSubcategory}, categories) {
+  getProductCategoriesTemplate(categories, productData) {
+    let productSubcategory;
+    if (productData) {
+      ({subcategory: productSubcategory} = productData);
+    }
     return `
       <div class="form-group form-group__half_left">
         <label class="form-label">Категория</label>
@@ -162,7 +176,7 @@ export default class ProductForm {
             return subcategories
               .map( ({id: subcategoryId, title: subcategoryTitle}) => {
                 return `
-                  <option ${(productSubcategory === subcategoryId) ? "selected" : ""} value="${this.productEditMode ? subcategoryId : ""}">${this.productEditMode ? categotyTitle : ""} &gt; ${this.productEditMode ? subcategoryTitle : ""}</option>
+                  <option ${(productSubcategory && productSubcategory === subcategoryId) ? "selected" : ""} value="${subcategoryId}">${categotyTitle} &gt; ${subcategoryTitle}</option>
                 `;
               });
           }).join("")}
@@ -176,11 +190,11 @@ export default class ProductForm {
       <div class="form-group form-group__half_left form-group__two-col">
         <fieldset>
           <label class="form-label">Цена ($)</label>
-          <input required="" type="number" name="price" class="form-control" placeholder="100" value="${this.productEditMode ? price : ""}">
+          <input required="" type="number" name="price" class="form-control" placeholder="100" value="${price}">
         </fieldset>
         <fieldset>
           <label class="form-label">Скидка ($)</label>
-          <input required="" type="number" name="discount" class="form-control" placeholder="0" value="${this.productEditMode ? discount : ""}">
+          <input required="" type="number" name="discount" class="form-control" placeholder="0" value="${discount}">
         </fieldset>
       </div>
     `;
@@ -190,7 +204,7 @@ export default class ProductForm {
     return `
       <div class="form-group form-group__part-half">
         <label class="form-label">Количество</label>
-        <input required="" type="number" class="form-control" name="quantity" placeholder="1" value="${this.productEditMode ? quantity : ""}">
+        <input required="" type="number" class="form-control" name="quantity" placeholder="1" value="${quantity}">
       </div>
     `;
   }
@@ -203,6 +217,57 @@ export default class ProductForm {
           <option ${(status === 1) ? "selected" : ""} value="1">Активен</option>
           <option ${(status === 0) ? "selected" : ""} value="0">Неактивен</option>
         </select>
+      </div>
+    `;
+  }
+
+  getFormTemplateWithPlaceholders(categories) {
+    return `
+      <div class="product-form">
+        <form data-elem="productForm" class="form-grid">
+        <div class="form-group form-group__half_left">
+          <fieldset>
+            <label class="form-label">Название товара</label>
+            <input required="" type="text" name="title" class="form-control" placeholder="Название товара">
+          </fieldset>
+        </div>
+        <div class="form-group form-group__wide">
+          <label class="form-label">Описание</label>
+          <textarea required="" class="form-control" name="description" placeholder="Описание товара"></textarea>
+        </div>
+        <div class="form-group form-group__wide" data-elem="sortable-list-container">
+          <label class="form-label">Фото</label>
+          <div data-elem="imageListContainer"><ul class="sortable-list"></ul></div>
+          <button type="button" name="uploadImage" class="button-primary-outline fit-content"><span>Загрузить</span></button>
+        </div>
+        ${this.getProductCategoriesTemplate(categories)}
+        <div class="form-group form-group__half_left form-group__two-col">
+          <fieldset>
+            <label class="form-label">Цена ($)</label>
+            <input required="" type="number" name="price" class="form-control" placeholder="100">
+          </fieldset>
+          <fieldset>
+            <label class="form-label">Скидка ($)</label>
+            <input required="" type="number" name="discount" class="form-control" placeholder="0">
+          </fieldset>
+        </div>
+        <div class="form-group form-group__part-half">
+          <label class="form-label">Количество</label>
+          <input required="" type="number" class="form-control" name="quantity" placeholder="1">
+        </div>
+        <div class="form-group form-group__part-half">
+          <label class="form-label">Статус</label>
+          <select class="form-control" name="status">
+            <option value="1">Активен</option>
+            <option value="0">Неактивен</option>
+          </select>
+        </div>
+        <div class="form-buttons">
+          <button type="submit" name="save" class="button-primary-outline">
+            Добавить товар
+          </button>
+        </div>
+      </form>
       </div>
     `;
   }
