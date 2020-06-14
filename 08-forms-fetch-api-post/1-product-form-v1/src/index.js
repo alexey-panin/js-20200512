@@ -29,9 +29,9 @@ export default class ProductForm {
     [this.categories, this.productData] = await this.getAllData(this.productEditMode);
 
     if (this.productEditMode) {
-      wrapper.innerHTML = this.getFormTemplate(this.productData, this.categories);
+      wrapper.innerHTML = this.getEditProductFormTemplate(this.productData, this.categories);
     } else {
-      wrapper.innerHTML = this.getFormTemplateWithPlaceholders(this.categories);
+      wrapper.innerHTML = this.getCreateProductFormTemplate(this.categories);
     }
 
     const element = wrapper.firstElementChild;
@@ -81,7 +81,7 @@ export default class ProductForm {
     }, {});
   }
 
-  getFormTemplate([productData], categories) {
+  getEditProductFormTemplate([productData], categories) {
     return `
       <div class="product-form">
         <form data-element="productForm" class="form-grid">
@@ -221,7 +221,7 @@ export default class ProductForm {
     `;
   }
 
-  getFormTemplateWithPlaceholders(categories) {
+  getCreateProductFormTemplate(categories) {
     return `
       <div class="product-form">
         <form data-elem="productForm" class="form-grid">
