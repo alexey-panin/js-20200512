@@ -15,7 +15,6 @@ export default class ProductForm {
 
     const {productForm} = this.subElements;
     const formData = new FormData(productForm);
-    const fetchUrl = this.getFetchUrl(this.productsUrl);
 
     const requestParams = {
       method: 'PATCH',
@@ -25,20 +24,7 @@ export default class ProductForm {
       body: formData
     }
 
-    let response;
-
-    try {
-      //TODO: change url back to fetchUrl variable
-      response = await fetchJson("https://course-js.javascript.ru/api/rest/products", requestParams);
-      this.element.dispatchEvent(new CustomEvent('product-updated', {
-        bubbles: true,
-        detail: event
-      }));
-    } catch (err) {
-      throw err;
-    } finally {
-      console.log(response);
-    }
+    this.doFetchRequest(this.productsUrl, requestParams, "product-updated");
   }
 
   onSubmitEventCreateProduct = async (event) => {
@@ -46,19 +32,25 @@ export default class ProductForm {
 
     const {productForm} = this.subElements;
     const formData = new FormData(productForm);
-    const fetchUrl = this.getFetchUrl(this.productsUrl);
 
     const requestParams = {
-      method: 'POST',
+      method: 'PATCH',
       body: formData
     }
+
+    this.doFetchRequest(this.productsUrl, requestParams, "product-saved");
+
+  }
+
+  async doFetchRequest(url, requestParams, customEventName) {
+    const fetchUrl = this.getFetchUrl(url);
 
     let response;
 
     try {
       //TODO: change url back to fetchUrl variable
       response = await fetchJson("https://course-js.javascript.ru/api/rest/products", requestParams);
-      this.element.dispatchEvent(new CustomEvent('product-saved', {
+      this.element.dispatchEvent(new CustomEvent(customEventName, {
         bubbles: true,
         detail: event
       }));
