@@ -1,4 +1,3 @@
-//import SortableList from '../../../09-tests-routes-browser-history-api/2-sortable-list/solution/index.js';
 import escapeHtml from './utils/escape-html.js';
 import fetchJson from './utils/fetch-json.js';
 
@@ -30,24 +29,6 @@ export default class ProductForm {
 
     //TODO: change url back to fetchUrl variable
     await this.doFetchComplexRequest ("http://course-js.javascript.ru/api/rest/products", requestParams);
-
-    //==============requestBin settings=====================
-
-/*     const headers = new Headers()
-    headers.append("Content-Type", "application/json")
-
-    const body = { "name": "Han Solo" }
-
-    const options = {
-      method: "POST",
-      headers,
-      mode: "cors",
-      body: formData,
-    }
-
-    fetch("https://en7rsmrm11lcj.x.pipedream.net/", options) */
-
-    //============end of requestBin settings==================
   }
 
   onSubmitPostProductData = async (event) => {
@@ -65,14 +46,30 @@ export default class ProductForm {
     await this.doFetchComplexRequest ("http://course-js.javascript.ru/api/rest/products", requestParams);
   }
 
+  async doFetchComplexRequest(fetchUrl, requestParams) {
+    try {
+      return await fetchJson(fetchUrl, requestParams);
+    } catch (err) {
+      throw err;
+    }
+  }
+
   uploadImage = async () => {
-    const file = this.inputElement.files[0];
+    const [file] = this.inputElement.files;
+    const {name: fileName} = file;
+
+    if (!file) return;
 
     const formData = new FormData();
     formData.append('image', file);
 
+    const uploadImageButton = this.subElements["sortable-list-container"].lastElementChild;
+    uploadImageButton.classList.add("is-loading");
+
+    let response;
+
     try {
-      return await fetchJson('https://api.imgur.com/3/image', {
+      response = await fetchJson('https://api.imgur.com/3/image', {
         method: 'POST',
         headers:             {
           Authorization: `Client-ID ${IMGUR_CLIENT_ID}`
@@ -81,7 +78,26 @@ export default class ProductForm {
       });
     } catch (err) {
       throw err;
+    } finally {
+      uploadImageButton.classList.remove("is-loading");
+      console.log(response);
     }
+
+    // append uploaded image to sortable image list
+    const {link} = response.data;
+
+    const {firstElementChild: sortableImageList} = this.subElements.imageListContainer;
+
+    sortableImageList.insertAdjacentHTML('beforeend', this.getSortableImageListRowTemplate(
+      {
+        images: [
+          {
+            url: link,
+            source: fileName,
+          }
+        ]
+      })
+    );
 
   }
 
@@ -96,14 +112,6 @@ export default class ProductForm {
     this.inputElement.onchange = this.uploadImage;
 
     this.inputElement.click();
-  }
-
-  async doFetchComplexRequest(fetchUrl, requestParams) {
-    try {
-      return await fetchJson(fetchUrl, requestParams);
-    } catch (err) {
-      throw err;
-    }
   }
 
   // TODO: check if it is a good place for url param or it should be put outside of class
@@ -196,7 +204,7 @@ export default class ProductForm {
         <form data-element="productForm" class="form-grid">
           ${this.getTitleTemplate(productData)}
           ${this.getDescriptionTemplate(productData)}
-          ${this.getSortableListContainerTemplate(productData)}
+          ${this.getSortableImageListContainerTemplate(productData)}
           ${this.getProductCategoriesTemplate(categories, productData)}
           ${this.getProductPriceDiscountTemplate(productData)}
           ${this.getProductQuantityTemplate(productData)}
@@ -231,27 +239,27 @@ export default class ProductForm {
     `;
   }
 
-  getSortableListContainerTemplate(productData) {
+  getSortableImageListContainerTemplate(productData) {
     return `
       <div class="form-group form-group__wide" data-element="sortable-list-container">
         <label class="form-label">Фото</label>
         <div data-element="imageListContainer">
-          ${this.getSortableListTemplate(productData)}
+          ${this.getSortableImageListTemplate(productData)}
         </div>
         <button type="button" name="uploadImage" class="button-primary-outline"><span>Загрузить</span></button>
       </div>
     `;
   }
 
-  getSortableListTemplate(productData) {
+  getSortableImageListTemplate(productData) {
     return `
       <ul class="sortable-list">
-        ${this.getSortableListRowTemplate(productData)}
+        ${this.getSortableImageListRowTemplate(productData)}
       </ul>
     `;
   }
 
-  getSortableListRowTemplate({images}) {
+  getSortableImageListRowTemplate({images}) {
     return images
       .map( ({url, source}) => {
         return `
