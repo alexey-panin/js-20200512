@@ -7,15 +7,108 @@ const BACKEND_URL = 'https://course-js.javascript.ru';
 
 export default class ProductForm {
   element; //html element
+  inputElement; //html element
   productData = null;
   // TODO: check is there is sence to include imported staff as a class property?
+  // e.g. escapeHtml = escapeHtml
   categories = null;
+
+  onSubmitPatchProductData = async (event) => {
+    event.preventDefault();
+
+    const {productForm} = this.subElements;
+    const formData = new FormData(productForm);
+    const fetchUrl = this.getFetchUrl(this.productsUrl);
+
+    const requestParams = {
+      method: 'PATCH',
+      headers:             {
+        'Content-Type': 'multipart/form-data'
+      },
+      body: formData
+    }
+
+    //TODO: change url back to fetchUrl variable
+    await this.doFetchComplexRequest ("http://course-js.javascript.ru/api/rest/products", requestParams);
+
+    //==============requestBin settings=====================
+
+/*     const headers = new Headers()
+    headers.append("Content-Type", "application/json")
+
+    const body = { "name": "Han Solo" }
+
+    const options = {
+      method: "POST",
+      headers,
+      mode: "cors",
+      body: formData,
+    }
+
+    fetch("https://en7rsmrm11lcj.x.pipedream.net/", options) */
+
+    //============end of requestBin settings==================
+  }
+
+  onSubmitPostProductData = async (event) => {
+    event.preventDefault();
+    const {productForm} = this.subElements;
+    const formData = new FormData(productForm);
+    const fetchUrl = this.getFetchUrl(this.productsUrl);
+
+    const requestParams = {
+      method: 'POST',
+      body: formData
+    }
+
+    //TODO: change url back to fetchUrl variable
+    await this.doFetchComplexRequest ("http://course-js.javascript.ru/api/rest/products", requestParams);
+  }
+
+  uploadImage = async () => {
+    const file = this.inputElement.files[0];
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      return await fetchJson('https://api.imgur.com/3/image', {
+        method: 'POST',
+        headers:             {
+          Authorization: `Client-ID ${IMGUR_CLIENT_ID}`
+        },
+        body: formData,
+      });
+    } catch (err) {
+      throw err;
+    }
+
+  }
+
+  onUploadImageButtonClick = (event) => {
+    event.preventDefault();
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = '<input type="file" accept="image/*" hidden="">'
+    this.inputElement = wrapper.firstElementChild;
+    document.body.append(this.inputElement);
+
+    this.inputElement.onchange = this.uploadImage;
+
+    this.inputElement.click();
+  }
+
+  async doFetchComplexRequest(fetchUrl, requestParams) {
+    try {
+      return await fetchJson(fetchUrl, requestParams);
+    } catch (err) {
+      throw err;
+    }
+  }
 
   // TODO: check if it is a good place for url param or it should be put outside of class
   constructor(productId, url = "api/rest/products") {
     this.productId = productId;
-    //TODO: fix this when productEditMode is false
-    //this.productEditMode = Boolean(this.productId);
     this.productEditMode = Boolean(this.productId);
     this.productsUrl = url;
     //TODO: where better to put it? Should it come as a params when creating a new ProductForm?
@@ -40,15 +133,27 @@ export default class ProductForm {
 
     this.subElements = this.getSubElements();
 
+    this.initEventListeners();
+
+  }
+
+  initEventListeners() {
+    const uploadImageButton = this.subElements["sortable-list-container"].lastElementChild;
+
+    uploadImageButton.addEventListener("click", this.onUploadImageButtonClick);
+    this.element.addEventListener("submit", (this.productEditMode) ? this.onSubmitPatchProductData : this.onSubmitPostProductData);
   }
 
   async getAllData(productEditMode) {
+    const categoriesRequest = this.getSingleData(this.categoriesUrl, {_sort: "weight", _refs: "subcategory"});
+
     const requests = [
-      this.getSingleData(this.categoriesUrl, {_sort: "weight", _refs: "subcategory"})
+      categoriesRequest
     ]
 
     if (productEditMode) {
-      requests.push(this.getSingleData(this.productsUrl, {id: this.productId}));
+      const productRequest = this.getSingleData(this.productsUrl, {id: this.productId});
+      requests.push(productRequest);
     }
 
     return await Promise.all(requests)
@@ -65,9 +170,13 @@ export default class ProductForm {
 
   getFetchUrl(url, searchQueryParams) {
     const fetchUrl = new URL(url, BACKEND_URL);
-    for (let [param, val] of Object.entries(searchQueryParams)) {
-      fetchUrl.searchParams.set(param, val);
+
+    if (searchQueryParams) {
+      for (let [param, val] of Object.entries(searchQueryParams)) {
+        fetchUrl.searchParams.set(param, val);
+      }
     }
+
     return fetchUrl;
   }
 
@@ -224,7 +333,7 @@ export default class ProductForm {
   getCreateProductFormTemplate(categories) {
     return `
       <div class="product-form">
-        <form data-elem="productForm" class="form-grid">
+        <form data-element="productForm" class="form-grid">
         <div class="form-group form-group__half_left">
           <fieldset>
             <label class="form-label">Название товара</label>
@@ -233,11 +342,11 @@ export default class ProductForm {
         </div>
         <div class="form-group form-group__wide">
           <label class="form-label">Описание</label>
-          <textarea required="" class="form-control" name="description" placeholder="Описание товара"></textarea>
+          <textarea required="" class="form-control" name="description" data-element="productDescription" placeholder="Описание товара"></textarea>
         </div>
-        <div class="form-group form-group__wide" data-elem="sortable-list-container">
+        <div class="form-group form-group__wide" data-element="sortable-list-container">
           <label class="form-label">Фото</label>
-          <div data-elem="imageListContainer"><ul class="sortable-list"></ul></div>
+          <div data-element="imageListContainer"><ul class="sortable-list"></ul></div>
           <button type="button" name="uploadImage" class="button-primary-outline fit-content"><span>Загрузить</span></button>
         </div>
         ${this.getProductCategoriesTemplate(categories)}
