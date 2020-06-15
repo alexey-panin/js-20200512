@@ -8,11 +8,9 @@ export default class ProductForm {
   element; //html element
   inputElement; //html element
   productData = null;
-  // TODO: check is there is sence to include imported staff as a class property?
-  // e.g. escapeHtml = escapeHtml
   categories = null;
 
-  onSubmitPatchProductData = async (event) => {
+  onSubmitEventUpdateProduct = async (event) => {
     event.preventDefault();
 
     const {productForm} = this.subElements;
@@ -27,12 +25,25 @@ export default class ProductForm {
       body: formData
     }
 
-    //TODO: change url back to fetchUrl variable
-    await this.doFetchComplexRequest ("http://course-js.javascript.ru/api/rest/products", requestParams);
+    let response;
+
+    try {
+      //TODO: change url back to fetchUrl variable
+      response = await fetchJson("https://course-js.javascript.ru/api/rest/products", requestParams);
+      this.element.dispatchEvent(new CustomEvent('product-updated', {
+        bubbles: true,
+        detail: event
+      }));
+    } catch (err) {
+      throw err;
+    } finally {
+      console.log(response);
+    }
   }
 
-  onSubmitPostProductData = async (event) => {
+  onSubmitEventCreateProduct = async (event) => {
     event.preventDefault();
+
     const {productForm} = this.subElements;
     const formData = new FormData(productForm);
     const fetchUrl = this.getFetchUrl(this.productsUrl);
@@ -42,28 +53,31 @@ export default class ProductForm {
       body: formData
     }
 
-    //TODO: change url back to fetchUrl variable
-    await this.doFetchComplexRequest ("http://course-js.javascript.ru/api/rest/products", requestParams);
-  }
+    let response;
 
-  async doFetchComplexRequest(fetchUrl, requestParams) {
     try {
-      return await fetchJson(fetchUrl, requestParams);
+      //TODO: change url back to fetchUrl variable
+      response = await fetchJson("https://course-js.javascript.ru/api/rest/products", requestParams);
+      this.element.dispatchEvent(new CustomEvent('product-saved', {
+        bubbles: true,
+        detail: event
+      }));
     } catch (err) {
       throw err;
+    } finally {
+      console.log(response);
     }
   }
 
   uploadImage = async () => {
     const [file] = this.inputElement.files;
-    const {name: fileName} = file;
 
     if (!file) return;
 
     const formData = new FormData();
     formData.append('image', file);
 
-    const uploadImageButton = this.subElements["sortable-list-container"].lastElementChild;
+    const {lastElementChild: uploadImageButton} = this.subElements["sortable-list-container"];
     uploadImageButton.classList.add("is-loading");
 
     let response;
@@ -80,10 +94,13 @@ export default class ProductForm {
       throw err;
     } finally {
       uploadImageButton.classList.remove("is-loading");
-      console.log(response);
     }
 
-    // append uploaded image to sortable image list
+    this.appendUploadedImageToSortableList(file, response);
+  }
+
+  appendUploadedImageToSortableList = (file, response) => {
+    const {name: fileName} = file;
     const {link} = response.data;
 
     const {firstElementChild: sortableImageList} = this.subElements.imageListContainer;
@@ -98,7 +115,6 @@ export default class ProductForm {
         ]
       })
     );
-
   }
 
   onUploadImageButtonClick = (event) => {
@@ -149,7 +165,7 @@ export default class ProductForm {
     const uploadImageButton = this.subElements["sortable-list-container"].lastElementChild;
 
     uploadImageButton.addEventListener("click", this.onUploadImageButtonClick);
-    this.element.addEventListener("submit", (this.productEditMode) ? this.onSubmitPatchProductData : this.onSubmitPostProductData);
+    this.element.addEventListener("submit", (this.productEditMode) ? this.onSubmitEventUpdateProduct : this.onSubmitEventCreateProduct);
   }
 
   async getAllData(productEditMode) {
