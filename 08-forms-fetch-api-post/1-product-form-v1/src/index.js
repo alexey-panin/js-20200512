@@ -15,13 +15,14 @@ export default class ProductForm {
 
     const {productForm} = this.subElements;
     const formData = new FormData(productForm);
+    const dataToSend = Object.fromEntries(formData);
 
     const requestParams = {
       method: 'PATCH',
       headers:             {
-        'Content-Type': 'multipart/form-data'
+        'Content-Type': 'application/json'
       },
-      body: formData
+      body: JSON.stringify(dataToSend)
     }
 
     this.doFetchRequest(this.productsUrl, requestParams, "product-updated");
@@ -32,10 +33,14 @@ export default class ProductForm {
 
     const {productForm} = this.subElements;
     const formData = new FormData(productForm);
+    const dataToSend = Object.fromEntries(formData);
 
     const requestParams = {
       method: 'PATCH',
-      body: formData
+      headers:             {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(dataToSend)
     }
 
     this.doFetchRequest(this.productsUrl, requestParams, "product-saved");
