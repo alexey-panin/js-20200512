@@ -10,7 +10,7 @@ export default class ProductForm {
   productData = null;
   categories = null;
 
-  onFormSubmit = async (event) => {
+  onFormSubmit = (event) => {
     event.preventDefault();
 
     const {productForm} = this.subElements;
