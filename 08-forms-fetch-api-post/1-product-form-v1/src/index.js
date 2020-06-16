@@ -15,12 +15,33 @@ export default class ProductForm {
 
     const {productForm} = this.subElements;
     const formData = new FormData(productForm);
-    const dataToSend = Object.fromEntries(formData);
+
+    const dataToSend = {
+      id: this.productId,
+      title: productForm.title.value,
+      description: productForm.description.value,
+      subcategory: productForm.subcategory.value,
+      price: parseInt(productForm.price.value, 10),
+      quantity: parseInt(productForm.quantity.value, 10),
+      discount: parseInt(productForm.discount.value, 10),
+      status: parseInt(productForm.status.value, 10),
+      images: []
+    };
+
+    const sourceImages = [...formData].filter(item => item[0] === 'source');
+    const urlImages = [...formData].filter(item => item[0] === 'url');
+
+    urlImages.map((item, index) => {
+      dataToSend.images.push({
+        url: item[1],
+        source: sourceImages[index][1]
+      })
+    });
 
     const requestParams = {
       method: 'PATCH',
       headers:             {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json;charset=utf-8'
       },
       body: JSON.stringify(dataToSend)
     }
@@ -38,7 +59,7 @@ export default class ProductForm {
     const requestParams = {
       method: 'PATCH',
       headers:             {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json;charset=utf-8'
       },
       body: JSON.stringify(dataToSend)
     }
@@ -53,8 +74,7 @@ export default class ProductForm {
     let response;
 
     try {
-      //TODO: change url back to fetchUrl variable
-      response = await fetchJson("https://course-js.javascript.ru/api/rest/products", requestParams);
+      response = await fetchJson(fetchUrl, requestParams);
       this.element.dispatchEvent(new CustomEvent(customEventName, {
         bubbles: true,
         detail: event
