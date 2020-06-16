@@ -400,4 +400,13 @@ export default class ProductForm {
     `;
   }
 
+  remove() {
+    this.element.remove();
+  }
+
+  destroy() {
+    this.remove();
+    this.subElements = {};
+  }
+
 }
