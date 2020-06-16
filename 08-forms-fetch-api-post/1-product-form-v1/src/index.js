@@ -10,14 +10,13 @@ export default class ProductForm {
   productData = null;
   categories = null;
 
-  onSubmitEventUpdateProduct = async (event) => {
+  onFormSubmit = async (event) => {
     event.preventDefault();
 
     const {productForm} = this.subElements;
     const formData = new FormData(productForm);
 
-    const dataToSend = {
-      id: this.productId,
+    const data = {
       title: productForm.title.value,
       description: productForm.description.value,
       subcategory: productForm.subcategory.value,
@@ -28,62 +27,42 @@ export default class ProductForm {
       images: []
     };
 
+    if (this.productEditMode) {
+      data.id = this.productId;
+    }
+
     const sourceImages = [...formData].filter(item => item[0] === 'source');
     const urlImages = [...formData].filter(item => item[0] === 'url');
 
     urlImages.map((item, index) => {
-      dataToSend.images.push({
+      data.images.push({
         url: item[1],
         source: sourceImages[index][1]
       })
     });
 
-    const requestParams = {
-      method: 'PATCH',
-      headers:             {
-        'Content-Type': 'application/json;charset=utf-8'
-      },
-      body: JSON.stringify(dataToSend)
-    }
-
-    this.doFetchRequest(this.productsUrl, requestParams, "product-updated");
+    this.sendFormData(data);
   }
 
-  onSubmitEventCreateProduct = async (event) => {
-    event.preventDefault();
-
-    const {productForm} = this.subElements;
-    const formData = new FormData(productForm);
-    const dataToSend = Object.fromEntries(formData);
+  async sendFormData(data) {
+    const fetchUrl = this.getFetchUrl(this.productsUrl);
 
     const requestParams = {
       method: 'PATCH',
       headers:             {
         'Content-Type': 'application/json;charset=utf-8'
       },
-      body: JSON.stringify(dataToSend)
+      body: JSON.stringify(data)
     }
 
-    this.doFetchRequest(this.productsUrl, requestParams, "product-saved");
+    await fetchJson(fetchUrl, requestParams);
 
-  }
+    const customEventName = (this.productEditMode) ? "product-updated" : "product-saved";
+    this.element.dispatchEvent(new CustomEvent(customEventName, {
+      bubbles: true,
+      detail: event
+    }));
 
-  async doFetchRequest(url, requestParams, customEventName) {
-    const fetchUrl = this.getFetchUrl(url);
-
-    let response;
-
-    try {
-      response = await fetchJson(fetchUrl, requestParams);
-      this.element.dispatchEvent(new CustomEvent(customEventName, {
-        bubbles: true,
-        detail: event
-      }));
-    } catch (err) {
-      throw err;
-    } finally {
-      console.log(response);
-    }
   }
 
   uploadImage = async () => {
@@ -152,7 +131,6 @@ export default class ProductForm {
     this.productId = productId;
     this.productEditMode = Boolean(this.productId);
     this.productsUrl = url;
-    //TODO: where better to put it? Should it come as a params when creating a new ProductForm?
     this.categoriesUrl = "api/rest/categories";
   }
 
@@ -182,7 +160,7 @@ export default class ProductForm {
     const uploadImageButton = this.subElements["sortable-list-container"].lastElementChild;
 
     uploadImageButton.addEventListener("click", this.onUploadImageButtonClick);
-    this.element.addEventListener("submit", (this.productEditMode) ? this.onSubmitEventUpdateProduct : this.onSubmitEventCreateProduct);
+    this.element.addEventListener("submit", this.onFormSubmit);
   }
 
   async getAllData(productEditMode) {
