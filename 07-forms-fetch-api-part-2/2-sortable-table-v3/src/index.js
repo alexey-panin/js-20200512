@@ -5,6 +5,8 @@ const BACKEND_URL = 'https://course-js.javascript.ru';
 export default class SortableTable {
   element;
   subElements = {};
+  currentSortingParams = {};
+  amountOfProductsToLoadAtOnce = 30;
 
   onClickSort = (event) => {
     this.element.classList.add('sortable-table_loading');
@@ -34,6 +36,34 @@ export default class SortableTable {
     }
   }
 
+  onScroll = async() => {
+    const shiftFromWindowBottom = 100;
+    const {bottom: windowRelativeBottom} = document.documentElement.getBoundingClientRect();
+    const {clientHeight: windowHeight} = document.documentElement;
+
+    if (this.element.classList.contains("sortable-table_loading")) {
+      return;
+    }
+
+    if (windowRelativeBottom < windowHeight + shiftFromWindowBottom) {
+      const {columnName, order} = this.currentSortingParams;
+      //TODO: start should be 1 product less otherwise same product will be rendered twice
+      this.start += this.amountOfProductsToLoadAtOnce;
+      this.end += this.amountOfProductsToLoadAtOnce;
+      this.element.classList.add("sortable-table_loading");
+      await this.getData(columnName, order);
+      this.addRows();
+    }
+  }
+
+  addRows() {
+    console.log(this.getTableRow(this.data));
+
+    //this.element.classList.remove("sortable-table_loading");
+    console.log(this.subElements.body);
+    
+  }
+
   removeSortingArrow(cellNameToSkip) {
     for (let child of this.subElements.header.children) {
       if (child.dataset.name === cellNameToSkip) {
@@ -48,7 +78,9 @@ export default class SortableTable {
     this.data = null;
     this.url = url;
     this.initSortColumnName = initSortColumnName;
-    this._getTableHeaderCells();
+    this.start = 0;
+    this.end = 30;
+    this.getTableHeaderCells();
     this.render();
     this.initEventListeners();
     this.initializeSorting(initSortColumnName);
@@ -56,13 +88,14 @@ export default class SortableTable {
 
   initEventListeners() {
     this.subElements.header.addEventListener("click", this.onClickSort);
+    window.addEventListener("scroll", this.onScroll);
   }
 
   removeEventListeners() {
     this.subElements.header.removeEventListener("click", this.onClickSort);
   }
 
-  _getTableHeaderCells() {
+  getTableHeaderCells() {
     const cells = this.headerData.map(({id, template}) => {
       return {
         id,
@@ -167,23 +200,32 @@ export default class SortableTable {
   async initializeSorting(columnName, order="asc") {
     const headerElements = [...this.subElements.header.children];
 
-    //if columnName is not supplied, pick up middle element of sortable columns for initial sort
     if (!columnName) {
-      const sortableColumnNames = headerElements.reduce((accumulator, item) => {
-        if (item.dataset.sortable === "true") {
-          accumulator.push(item.dataset.name);
-        }
-        return accumulator;
-      }, []);
-
-      columnName = sortableColumnNames[Math.round(sortableColumnNames.length / 2 - 1)];
+      columnName = this.findMiddleSortableColumn();
     }
 
     await this.getData(columnName, order);
 
     const headerColumnElement = headerElements.find(item => item.dataset.name === columnName);
-    this.sort();
+    this.renderSortedTable();
     headerColumnElement.dataset.order = order;
+
+    this.currentSortingParams.columnName = columnName;
+    this.currentSortingParams.order = order;
+  }
+
+  findMiddleSortableColumn() {
+    const headerElements = [...this.subElements.header.children];
+
+    const sortableColumnNames = headerElements.reduce((accumulator, item) => {
+      if (item.dataset.sortable === "true") {
+        accumulator.push(item.dataset.name);
+      }
+      return accumulator;
+    }, []);
+
+    return sortableColumnNames[Math.round(sortableColumnNames.length / 2 - 1)];
+    
   }
 
   async getData(columnName, order) {
@@ -199,14 +241,14 @@ export default class SortableTable {
   
   }
 
-  getFetchUrl({columnName, order, start = 0, end = 30}) {
+  getFetchUrl({columnName, order}) {
     const url = new URL(this.url, BACKEND_URL);
 
     const searchQueryParams = {
       _sort: columnName,
       _order: order,
-      _start: start,
-      _end: end
+      _start: this.start,
+      _end: this.end
     }
 
     for (let [param, val] of Object.entries(searchQueryParams)) {
@@ -240,7 +282,7 @@ export default class SortableTable {
     });
   }
 
-  sort () {
+  renderSortedTable () {
     const sortedTableBody = this.getTableBody(this.data);
     this.subElements.body.innerHTML = sortedTableBody;
     this.element.classList.remove('sortable-table_loading');
