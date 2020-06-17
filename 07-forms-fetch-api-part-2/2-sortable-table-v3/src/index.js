@@ -6,11 +6,15 @@ export default class SortableTable {
   element;
   subElements = {};
   currentSortingParams = {};
-  amountOfProductsToLoadAtOnce = 30;
+  amountOfProductsToLoad = 30;
+  allDataFetched = false;
+  loadedDataAccumulator = [];
 
   onClickSort = (event) => {
     this.element.classList.add('sortable-table_loading');
     this.subElements.body.classList.add('sortable-table_empty');
+    this.start = 0;
+    this.end = this.amountOfProductsToLoad;
 
     const targetHeaderCell = event.target.closest('[data-sortable="true"]');
 
@@ -37,33 +41,43 @@ export default class SortableTable {
   }
 
   onScroll = async() => {
-    const shiftFromWindowBottom = 100;
-    const {bottom: windowRelativeBottom} = document.documentElement.getBoundingClientRect();
-    const {clientHeight: windowHeight} = document.documentElement;
-
     if (this.element.classList.contains("sortable-table_loading")) {
       return;
     }
 
+    if (this.allDataFetched) {
+      return;
+    }
+
+    const shiftFromWindowBottom = 100;
+    const {bottom: windowRelativeBottom} = document.documentElement.getBoundingClientRect();
+    const {clientHeight: windowHeight} = document.documentElement;
+
     if (windowRelativeBottom < windowHeight + shiftFromWindowBottom) {
       const {columnName, order} = this.currentSortingParams;
-      //TODO: start should be 1 product less otherwise same product will be rendered twice
-      this.start += this.amountOfProductsToLoadAtOnce;
-      this.end += this.amountOfProductsToLoadAtOnce;
-      this.element.classList.add("sortable-table_loading");
-      await this.getData(columnName, order);
 
-      //TODO: check whether all data was loaded;
+      this.start += this.amountOfProductsToLoad;
+      this.end += this.amountOfProductsToLoad;
+      this.element.classList.add("sortable-table_loading");
+      this.data = await this.getData(columnName, order);
+
+      if (!this.data.length) {
+        this.allDataFetched = true;
+        this.element.classList.remove("sortable-table_loading");
+        return;
+      }
 
       this.addRows();
     }
   }
 
   addRows() {
-    //TODO: think whether it is good to replace this.data with what came
-    // or better to concatanate existing data with a new one
-    const tableBody = this.subElements.body.firstElementChild;
-    tableBody.insertAdjacentHTML('beforeend', this.getTableRow(this.data));
+    const {body} = this.subElements;
+    console.log(this.subElements);
+    const newRows = this.getTableRow(this.data);
+    console.log(body);
+    body.insertAdjacentHTML('beforeend', newRows);
+    //body.append(newRows);
     this.element.classList.remove("sortable-table_loading");
   }
 
@@ -82,7 +96,7 @@ export default class SortableTable {
     this.url = url;
     this.initSortColumnName = initSortColumnName;
     this.start = 0;
-    this.end = 30;
+    this.end = this.amountOfProductsToLoad;
     this.getTableHeaderCells();
     this.render();
     this.initEventListeners();
@@ -204,7 +218,7 @@ export default class SortableTable {
     const headerElements = [...this.subElements.header.children];
 
     if (!columnName) {
-      columnName = this.findMiddleSortableColumn();
+      columnName = this.findMiddleSortableColumnName();
     }
 
     await this.getData(columnName, order);
@@ -217,7 +231,7 @@ export default class SortableTable {
     this.currentSortingParams.order = order;
   }
 
-  findMiddleSortableColumn() {
+  findMiddleSortableColumnName() {
     const headerElements = [...this.subElements.header.children];
 
     const sortableColumnNames = headerElements.reduce((accumulator, item) => {
@@ -237,11 +251,13 @@ export default class SortableTable {
     try {
       const response = await fetchJson(fetchUrl);
       this.data = Object.values(response);
+      this.loadedDataAccumulator = [...this.loadedDataAccumulator, ...this.data];
     } catch (error) {
       //TODO: do something better than console.log
       console.log(error);      
     }
-  
+
+    return this.data;
   }
 
   getFetchUrl({columnName, order}) {
@@ -258,7 +274,7 @@ export default class SortableTable {
       url.searchParams.set(param, val);
     }
 
-    return url.toString();
+    return url;
   }
 
     // not needed now as sorting is done on backend side
@@ -286,8 +302,17 @@ export default class SortableTable {
   }
 
   renderSortedTable () {
-    const sortedTableBody = this.getTableBody(this.data);
-    this.subElements.body.innerHTML = sortedTableBody;
+    const {body: currentTableBody} = this.subElements;
+
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = this.getTableBody(this.data);
+    const sortedTableBody = wrapper.firstElementChild;
+    this.element.replaceChild(sortedTableBody, currentTableBody);
+
+    //after replaceChild, this.subElements have a link to an old talbe body node
+    // => should reinitialize subElements again.
+    this.subElements = this.getSubElements();
+
     this.element.classList.remove('sortable-table_loading');
     this.subElements.body.classList.remove('sortable-table_empty');
   }
