@@ -52,16 +52,19 @@ export default class SortableTable {
       this.end += this.amountOfProductsToLoadAtOnce;
       this.element.classList.add("sortable-table_loading");
       await this.getData(columnName, order);
+
+      //TODO: check whether all data was loaded;
+
       this.addRows();
     }
   }
 
   addRows() {
-    console.log(this.getTableRow(this.data));
-
-    //this.element.classList.remove("sortable-table_loading");
-    console.log(this.subElements.body);
-    
+    //TODO: think whether it is good to replace this.data with what came
+    // or better to concatanate existing data with a new one
+    const tableBody = this.subElements.body.firstElementChild;
+    tableBody.insertAdjacentHTML('beforeend', this.getTableRow(this.data));
+    this.element.classList.remove("sortable-table_loading");
   }
 
   removeSortingArrow(cellNameToSkip) {
