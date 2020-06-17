@@ -13,33 +13,44 @@ export default class ProductForm {
   onFormSubmit = (event) => {
     event.preventDefault();
 
-    const {productForm} = this.subElements;
+    const {productForm, imageListContainer} = this.subElements;
     const formData = new FormData(productForm);
+    const data = {};
+    const payloadFields = [
+      "title",
+      "description",
+      "subcategory",
+      "price",
+      "quantity",
+      "discount",
+      "status"
+    ];
+    const formatToNumber = ["price", "quantity", "discount", "status"];
 
-    const data = {
-      title: productForm.title.value,
-      description: productForm.description.value,
-      subcategory: productForm.subcategory.value,
-      price: parseInt(productForm.price.value, 10),
-      quantity: parseInt(productForm.quantity.value, 10),
-      discount: parseInt(productForm.discount.value, 10),
-      status: parseInt(productForm.status.value, 10),
-      images: []
-    };
+    for (let [name, value] of formData) {
+      if (payloadFields.includes(name)) {
+        value = (formatToNumber.includes(name))
+          ? parseInt(value, 10)
+          : value;
+        data[name] = value;
+      }
+    }
 
     if (this.productEditMode) {
       data.id = this.productId;
     }
 
-    const sourceImages = [...formData].filter(item => item[0] === 'source');
-    const urlImages = [...formData].filter(item => item[0] === 'url');
+    data.images = [];
 
-    urlImages.map((item, index) => {
+    const imagesHTMLCollection = imageListContainer.querySelectorAll('.sortable-table__cell-img');
+
+    for (const image of imagesHTMLCollection) {
+      const {alt, src} = image;
       data.images.push({
-        url: item[1],
-        source: sourceImages[index][1]
-      })
-    });
+        url: src,
+        source: alt
+      });
+    }
 
     this.sendFormData(data);
   }
@@ -279,7 +290,7 @@ export default class ProductForm {
             <input type="hidden" name="source" value="${source}">
             <span>
               <img src="icon-grab.svg" data-grab-handle alt="grab">
-              <img class="sortable-table__cell-img" alt="Image" src="${url}">
+              <img class="sortable-table__cell-img" alt="${source}" src="${url}">
               <span>${source}</span>
             </span>
             <button type="button">
