@@ -186,10 +186,7 @@ export default class ProductForm {
       requests.push(productRequest);
     }
 
-    return await Promise.all(requests)
-      .then(responses => {
-        return responses;
-      });
+    return await Promise.all(requests);
   }
 
   async getSingleData(url, searchQueryParams) {
