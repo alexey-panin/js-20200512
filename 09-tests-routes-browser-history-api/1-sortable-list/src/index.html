@@ -7,13 +7,63 @@
 <div id="holder" data-grab-handle></div>
 
 <script type="module">
-  // import SortableList from './index.js';
-  import SortableList from '../solution/index.js';
+  import SortableList from './index.js';
 
-  // const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  //const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
   const data = [1, 2, 3];
 
-  const sortableList = new SortableList({
+  const dataMock = [
+    `<li class="products-edit__imagelist-item sortable-list__item" style="">
+      <input type="hidden" name="url" value="https://shop-image.js.cx/101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-0.jpg">
+      <input type="hidden" name="source" value="101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-0.jpg">
+      <span>
+        <img src="icon-grab.svg" data-grab-handle alt="grab">
+        <img class="sortable-table__cell-img" alt="101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-0.jpg" src="https://shop-image.js.cx/101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-0.jpg">
+        <span>101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-0.jpg</span>
+      </span>
+      <button type="button">
+        <img src="icon-trash.svg" data-delete-handle alt="delete">
+      </button>
+    </li>`,
+    `<li class="products-edit__imagelist-item sortable-list__item" style="">
+      <input type="hidden" name="url" value="https://shop-image.js.cx/101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-5.jpg">
+      <input type="hidden" name="source" value="101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-5.jpg">
+      <span>
+        <img src="icon-grab.svg" data-grab-handle alt="grab">
+        <img class="sortable-table__cell-img" alt="101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-5.jpg" src="https://shop-image.js.cx/101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-5.jpg">
+        <span>101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-5.jpg</span>
+      </span>
+      <button type="button">
+        <img src="icon-trash.svg" data-delete-handle alt="delete">
+      </button>
+    </li>`,
+    `<li class="products-edit__imagelist-item sortable-list__item" style="">
+      <input type="hidden" name="url" value="https://shop-image.js.cx/101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-6.jpg">
+      <input type="hidden" name="source" value="101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-6.jpg">
+      <span>
+        <img src="icon-grab.svg" data-grab-handle alt="grab">
+        <img class="sortable-table__cell-img" alt="101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-6.jpg" src="https://shop-image.js.cx/101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-6.jpg">
+        <span>101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-6.jpg</span>
+      </span>
+      <button type="button">
+        <img src="icon-trash.svg" data-delete-handle alt="delete">
+      </button>
+    </li>`,
+    `<li class="products-edit__imagelist-item sortable-list__item" style="">
+      <input type="hidden" name="url" value="https://shop-image.js.cx/101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-7.jpg">
+      <input type="hidden" name="source" value="101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-7.jpg">
+      <span>
+        <img src="icon-grab.svg" data-grab-handle alt="grab">
+        <img class="sortable-table__cell-img" alt="101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-7.jpg" src="https://shop-image.js.cx/101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-7.jpg">
+        <span>101-planset-lenovo-tab-e10-tb-x104l-32-gb-3g-lte-cernyj-7.jpg</span>
+      </span>
+      <button type="button">
+        <img src="icon-trash.svg" data-delete-handle alt="delete">
+      </button>
+    </li>`
+  ]
+
+/*   const sortableList = new SortableList({
     items: data.map(item => {
       const element = document.createElement('li');
 
@@ -21,6 +71,10 @@
 
       return element;
     })
+  }); */
+
+  const sortableList = new SortableList({
+    items: dataMock
   });
 
   holder.append(sortableList.element);
