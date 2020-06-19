@@ -77,7 +77,6 @@ export default class SortableTable {
     const newRows = this.getTableRow(this.data);
     console.log(body);
     body.insertAdjacentHTML('beforeend', newRows);
-    //body.append(newRows);
     this.element.classList.remove("sortable-table_loading");
   }
 
@@ -306,6 +305,7 @@ export default class SortableTable {
 
     const wrapper = document.createElement('div');
     wrapper.innerHTML = this.getTableBody(this.data);
+    
     const sortedTableBody = wrapper.firstElementChild;
     this.element.replaceChild(sortedTableBody, currentTableBody);
 
