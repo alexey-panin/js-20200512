@@ -1,4 +1,5 @@
-import tooltip from './index';
+// import tooltip from './index';
+import tooltip from '../solution/index.js';
 
 describe('events-practice/tooltip', () => {
   beforeEach(() => {

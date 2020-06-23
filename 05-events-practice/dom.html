@@ -76,8 +76,11 @@
       </div>
     </div>
     <script>
-      red.addEventListener('click', event => {
-        console.error('red', event)
+      red.addEventListener('click', function (event) {
+        console.error('red', event);
+        console.error('target', event.target);
+        console.error('currentTarget', event.currentTarget);
+        console.error('this', this);
       });
 
       orange.addEventListener('click', event => {
