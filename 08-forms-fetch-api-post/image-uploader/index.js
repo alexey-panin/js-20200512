@@ -1,4 +1,4 @@
-import fetchJson from '../utils/fetch-json.js';
+import fetchJson from '../1-product-form-v1/src/utils/fetch-json.js';
 
 const IMGUR_CLIENT_ID = "28aaa2e823b03b1";
 
