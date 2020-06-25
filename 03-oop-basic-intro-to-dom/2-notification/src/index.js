@@ -1,6 +1,6 @@
-let activeComponent = null;
-
 export default class NotificationMessage {
+  static activeComponent;
+
   element; // HTMLElement;
 
   constructor(
@@ -32,14 +32,14 @@ export default class NotificationMessage {
 
   render() {
 
-    if (activeComponent) {
-      activeComponent.remove();
+    if (NotificationMessage.activeComponent) {
+      NotificationMessage.activeComponent.remove();
     }
 
     const element = document.createElement('div');
     element.innerHTML = this.template;
     this.element = element.firstElementChild;
-    activeComponent = this.element;
+    NotificationMessage.activeComponent = this.element;
   }
 
   show(parent = document.body) {
